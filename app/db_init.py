@@ -1,5 +1,5 @@
 import sqlite3
-from utils import get_db
+from app.utils import get_db
 
 
 def init_db():
