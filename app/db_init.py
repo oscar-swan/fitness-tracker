@@ -39,7 +39,8 @@ def init_db():
             age                 INTEGER,
             gender              TEXT,
             goal                TEXT,   -- massgain | cut | fatloss | recomp |
-                                        --   powerlifting | endurance | maintenance
+                                        --   powerlifting | endurance
+            goal_set_date       TEXT,
             experience          TEXT,   -- beginner | intermediate | advanced
             bf_category         TEXT,   -- low | medium | high (optional, for TDEE tweak)
             muscle_category     TEXT,   -- low | medium | high (optional, for TDEE tweak)
