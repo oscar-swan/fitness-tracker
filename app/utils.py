@@ -92,9 +92,15 @@ def get_bmi(weight, height):
     bmi = round(weight / (height_m ** 2), 1)
     return bmi
 
+def get_lean_body_mass(weight, bf):
+    """Returns lean body weight"""
+    return round(weight * (1 - (bf / 100)), 2)
+
+    
 
 if __name__ == '__main__':
     print(get_training_plan("hypertrophy"))
     print(get_diet_rec("hypertrophy", "male", 80, 182, 22, body_fat_cat="Medium", muscle_mass_cat="Medium", activity_multiplier=1.55, cal_adjustment=0))
     print(get_body_fat_percentage("male", 182, 85, 38))
     print(get_bmi(80, 182))
+    print(get_lean_body_mass(80, 25))
