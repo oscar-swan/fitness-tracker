@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import math
-from config import tdee_adjustments, protein_multipliers, plans, cal_goal_adjustments, fat_pct_of_calories
+from config import tdee_adjustments, protein_multipliers, plans, cal_goal_adjustments, fat_pct_of_calories, increasing_score_thresholds
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "fitness_tracker.db")
 
@@ -96,7 +96,87 @@ def get_lean_body_mass(weight, bf):
     """Returns lean body weight"""
     return round(weight * (1 - (bf / 100)), 2)
 
-    
+def get_avg(list):
+    """Returns average of list"""
+    if not list:
+        return None
+    return sum(list) / len(list)
+
+def get_avg_weekly_weight_change(list):
+    """Finds weekly weight change over a period of time using weekly averages if enough data"""
+    if not list or len(list) == 1:
+        return None
+    if len(list) >= 14 and len(list) < 21:
+        list = list[-14:]
+        week1 = sum(list[:7]) / 7
+        week2 = sum(list[7:]) / 7
+        avg = week2 - week1
+        return round(avg, 2)
+    if len(list) == 21:
+        week1 = sum(list[:7]) / 7
+        week2 = sum(list[7:14]) / 7
+        week3 = sum(list[14:21]) / 7
+        change1 = week2 - week1
+        change2 = week3 - week2
+        avg = (change1 + change2) / 2
+        return round(avg, 2)
+    daily_change = []
+    for i in range(1, len(list)):
+        daily_change.append(list[i] - list[i - 1])
+    avg_daily_change = sum(daily_change) / len(daily_change)
+    return round(avg_daily_change * 7, 2)
+
+def get_avg_weekly_bf_change(list):
+    """Finds weekly body fat change over a period of time using weekly averages"""
+    if not list or len(list) == 1:
+        return None
+    changes = []
+    for i in range(1, len(list)):
+        changes.append(list[i] - list[i - 1])
+    avg = sum(changes) / len(changes)
+    return round(avg, 2)
+
+def is_increasing(list):
+    """Takes an even length list and returns True if the values are increasing"""
+    half = len(list) // 2
+    older = list[:half]
+    newer = list[half:]
+    older_avg = sum(older) / len(older)
+    newer_avg = sum(newer) / len(newer)
+    if newer_avg > older_avg:
+        return True
+    else:
+        return False
+
+def get_vote_score(percentage):
+    """Returns a score 1 to 3 depending on if data is increasing, plateauing or decreasing"""
+    if percentage <= increasing_score_thresholds[1]:
+        return 1
+    elif percentage <= increasing_score_thresholds[2]:
+        return 2
+    else:
+        return 3
+
+def is_metric_increasing(exercises):
+    """Uses a list of exercises and the 1RM history to determine if user is progressing, plateauing or losing ability"""
+    true_count = 0
+    false_count = 0
+    for exercise in exercises:
+        if is_increasing(exercise):
+            true_count += 1
+        else:
+            false_count += 1
+    total = true_count + false_count
+    perc_true = (true_count / total) * 100
+    return get_vote_score(perc_true)
+
+def get_1rm(weight,reps):
+    """Finds 1RM from a set"""
+    if reps == 1:
+        return round(weight)
+    one_rm = weight * (1 + reps / 30)
+    return round(one_rm)
+
 
 if __name__ == '__main__':
     print(get_training_plan("hypertrophy"))
@@ -104,3 +184,9 @@ if __name__ == '__main__':
     print(get_body_fat_percentage("male", 182, 85, 38))
     print(get_bmi(80, 182))
     print(get_lean_body_mass(80, 25))
+    print(get_avg([1,2,3,4,5,6,7,8,9]))
+    print(get_avg_weekly_weight_change([74.3,74.9,74.7,74.5,74.6,74.3,74.3,74.4,73.7,73.5,74.1,74.1,74.1,73.3,73.2,73.5,73.0]))
+    print(get_avg_weekly_bf_change([20.3,19.2,18.4,17.6]))
+    print(is_increasing([100,102,98,96,104,108]))
+    print(is_metric_increasing([ [8,8,9,9] , [2,2,2,3] , [8,8,7,7] ]))
+    print(get_1rm(80,8))

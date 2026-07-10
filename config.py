@@ -36,3 +36,7 @@ fat_pct_of_calories = {
         "hypertrophy": 0.25, "cut": 0.25, "fat_loss": 0.30,
         "recomp": 0.25, "strength_gain": 0.25, "endurance": 0.20,
     }
+
+increasing_score_thresholds = {
+    1:40 , 2:60
+}
