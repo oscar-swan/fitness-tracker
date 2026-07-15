@@ -1,7 +1,8 @@
 import sqlite3
 import os
 import math
-from config import tdee_adjustments, protein_multipliers, plans, cal_goal_adjustments, fat_pct_of_calories, increasing_score_thresholds
+from datetime import datetime
+from config import tdee_adjustments, protein_multipliers, plans, cal_goal_adjustments, fat_pct_of_calories, increasing_score_thresholds, macro_tolerance
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "fitness_tracker.db")
 
@@ -16,7 +17,7 @@ def get_training_plan(goal):
     """Gives a training plan based on the user's goal"""
     return plans.get(goal, "Error, goal did not match plan")
 
-def get_diet_rec(goal, gender, weight, height, age, body_fat_cat=None, muscle_mass_cat=None, activity_multiplier=1.55, cal_adjustment=0):
+def get_diet_rec(goal, gender, weight, height, age, body_fat_cat=None, muscle_mass_cat=None, cal_adjustment=0, activity_multiplier=1.55):
     """Returns dictionary of recommended daily intake for all macro nutrients"""
     rec_calories = get_rec_calories(goal, gender, weight, height, age, body_fat_cat, muscle_mass_cat, activity_multiplier, cal_adjustment)
     rec_protein = get_rec_protein(goal, weight)
@@ -96,51 +97,52 @@ def get_lean_body_mass(weight, bf):
     """Returns lean body weight"""
     return round(weight * (1 - (bf / 100)), 2)
 
-def get_avg(list):
+def get_avg(lst):
     """Returns average of list"""
-    if not list:
+    filtered = [x for x in lst if x is not None]
+    if not filtered:
         return None
-    return sum(list) / len(list)
+    return sum(filtered) / len(filtered)
 
-def get_avg_weekly_weight_change(list):
+def get_avg_weekly_weight_change(lst):
     """Finds weekly weight change over a period of time using weekly averages if enough data"""
-    if not list or len(list) == 1:
+    if not lst or len(lst) == 1:
         return None
-    if len(list) >= 14 and len(list) < 21:
-        list = list[-14:]
-        week1 = sum(list[:7]) / 7
-        week2 = sum(list[7:]) / 7
+    if len(lst) >= 14 and len(lst) < 21:
+        lst = lst[-14:]
+        week1 = sum(lst[:7]) / 7
+        week2 = sum(lst[7:]) / 7
         avg = week2 - week1
         return round(avg, 2)
-    if len(list) == 21:
-        week1 = sum(list[:7]) / 7
-        week2 = sum(list[7:14]) / 7
-        week3 = sum(list[14:21]) / 7
+    if len(lst) == 21:
+        week1 = sum(lst[:7]) / 7
+        week2 = sum(lst[7:14]) / 7
+        week3 = sum(lst[14:21]) / 7
         change1 = week2 - week1
         change2 = week3 - week2
         avg = (change1 + change2) / 2
         return round(avg, 2)
     daily_change = []
-    for i in range(1, len(list)):
-        daily_change.append(list[i] - list[i - 1])
+    for i in range(1, len(lst)):
+        daily_change.append(lst[i] - lst[i - 1])
     avg_daily_change = sum(daily_change) / len(daily_change)
     return round(avg_daily_change * 7, 2)
 
-def get_avg_weekly_bf_change(list):
+def get_avg_weekly_bf_change(lst):
     """Finds weekly body fat change over a period of time using weekly averages"""
-    if not list or len(list) == 1:
+    if not lst or len(lst) == 1:
         return None
     changes = []
-    for i in range(1, len(list)):
-        changes.append(list[i] - list[i - 1])
+    for i in range(1, len(lst)):
+        changes.append(lst[i] - lst[i - 1])
     avg = sum(changes) / len(changes)
     return round(avg, 2)
 
-def is_increasing(list):
+def is_increasing(lst):
     """Takes an even length list and returns True if the values are increasing"""
-    half = len(list) // 2
-    older = list[:half]
-    newer = list[half:]
+    half = len(lst) // 2
+    older = lst[:half]
+    newer = lst[half:]
     older_avg = sum(older) / len(older)
     newer_avg = sum(newer) / len(newer)
     if newer_avg > older_avg:
@@ -177,6 +179,43 @@ def get_1rm(weight,reps):
     one_rm = weight * (1 + reps / 30)
     return round(one_rm)
 
+def get_days_since_goal(goal_set_date):
+    """Finds days since goal"""
+    days_since_goal = (
+            datetime.now() - datetime.strptime(goal_set_date, "%Y-%m-%d")
+    ).days if goal_set_date else None
+    return days_since_goal
+
+def get_intensity(distance_km, duration_minutes):
+    """Finds intensity (speed)"""
+    if not distance_km or not duration_minutes or duration_minutes <= 0:
+        return None
+
+    intensity = round(distance_km / (duration_minutes / 60), 2)
+    return intensity
+
+def avg_field(rows, field):
+    """Calculates average value for a field across a list of records"""
+    if rows and field:
+        values = [row[field] for row in rows]
+        return get_avg(values)
+    else:
+        return None
+
+def get_macro_bounds(diet_rec):
+    """Returns the boundaries for each recommended macro"""
+    return {
+        macro: {
+            "upper": diet_rec[key] * bounds["upper"],
+            "lower": diet_rec[key] * bounds["lower"],
+        }
+        for macro, key, bounds in [
+            ("calories", "calories", macro_tolerance["calories"]),
+            ("protein", "protein", macro_tolerance["protein"]),
+            ("carbs", "carbs", macro_tolerance["carbs"]),
+            ("fats", "fats", macro_tolerance["fats"]),
+        ]
+    }
 
 if __name__ == '__main__':
     print(get_training_plan("hypertrophy"))
@@ -190,3 +229,4 @@ if __name__ == '__main__':
     print(is_increasing([100,102,98,96,104,108]))
     print(is_metric_increasing([ [8,8,9,9] , [2,2,2,3] , [8,8,7,7] ]))
     print(get_1rm(80,8))
+    print(get_macro_bounds({"calories": 2500, "protein": 150, "fats": 83, "carbs": 312}))

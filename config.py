@@ -37,6 +37,65 @@ fat_pct_of_calories = {
         "recomp": 0.25, "strength_gain": 0.25, "endurance": 0.20,
     }
 
+#Percentage of vote required to determine state of loss/gain
 increasing_score_thresholds = {
     1:40 , 2:60
+}
+
+#String given to user when issue is flagged
+alert_strings = {
+    "NED":"Log data more consistently", "NWE": "Workout more often",
+    "NEW":"Lift weights more often", "NEC": "Do more cardio",
+    "TooLittleCals": "Eat more calories",
+    "TooManyCals": "Eat less calories",
+    "TooLittleProtein": "Eat more protein",
+    "TooMuchProtein": "Eat less protein",
+    "TooLittleCarbs": "Eat more carbs",
+    "TooManyCarbs": "Eat less carbs",
+    "TooLittleFats": "Eat more fats",
+    "TooManyFats": "Eat less fats",
+    "TooLittleMicros": "Eat more micronutrients",
+    "TooLittleSleep": "Sleep at least 8 hours a day",
+    "BfNoLossIssue": "You are not losing body fat",
+    "BfNoGainIssue": "You are not gaining body fat",
+    "StrengthNoGainIssue": "You are not gaining strength",
+    "StrengthNoMaintainIssue": "You are not maintaining strength well",
+    "DistanceIssue": "You are decreasing the distance you cover",
+    "IntensityIssue": "You are working with less intensity"
+}
+
+#Sorts the different goals on type of exercise required
+weights_goals = ["hypertrophy", "cut", "recomp", "strength_gain"]
+cardio_goals = ["fat_loss", "endurance"]
+
+#Multipliers used on exact recommended values to get recommended ranges
+macro_tolerance = {
+    "calories": {"upper": 1.075, "lower": 0.925},
+    "protein": {"upper": 1.10, "lower": 0.90},
+    "carbs": {"upper": 1.175, "lower": 0.875},
+    "fats": {"upper": 1.225, "lower": 0.775},
+}
+
+#Values used to check if weekly weight change is in line with the goal
+weekly_weight_change_kg = {
+    "hypertrophy": {"upper": 0.4, "lower": 0.2},
+    "strength_gain": {"upper": 0.24, "lower": 0.0},
+    "cut": {"upper": -0.32, "lower": -0.56},
+    "fat_loss": {"upper": -0.4, "lower": -0.8},
+    "recomp": {"upper": 0.08, "lower": -0.08},
+    "endurance": {"upper": 0.0, "lower": -0.08},
+}
+
+#Values used to analyse user data based on goal
+data_flags = {
+    "hypertrophy": {"bf": {2, 3, None}, "strength": {3}},
+    "strength_gain": {"bf": {2, 3, None}, "strength": {3}},
+    "cut": {"bf": {1, None}, "strength": {2, 3}},
+    "fat_loss": {"bf": {1, None}},
+    "recomp": {"bf": {1, None}, "strength": {2, 3}},
+    "endurance": {"distance": {2, 3}, "intensity": {3}}
+}
+
+bf_boundaries= {
+    "upper":0.1, "lower":-0.1
 }
