@@ -14,6 +14,8 @@ def create_app():
     init_db()
 
     from app.auth import auth_bp
+    from app.dashboard import dashboard_bp
     app.register_blueprint(auth_bp)
+    app.register_blueprint(dashboard_bp)
 
     return app

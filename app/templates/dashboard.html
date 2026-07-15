@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <h1 class="dashboard-header">Dashboard</h1>
+
+    <!-- Alert -->
+    <div class="alert-section">
+    <div class="alert-box">
+        <h2>Alerts</h2>
+
+        {% if alert %}
+            {% for a in alert %}
+                <p>{{ a }}</p>
+            {% endfor %}
+        {% else %}
+            <p>You're progressing correctly. No issues found.</p>
+        {% endif %}
+    </div>
+</div>
+
+    <!-- Current Stats -->
+    <div class="section">
+        <h2>Current Stats</h2>
+
+        <div class="stats-grid">
+
+            <div class="stat-box">
+                <h3>Weight</h3>
+                <p>{{ weight }} kg</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Body Fat</h3>
+                {% if bf is not none %}
+                    <p>{{ bf }}%</p>
+                {% else %}
+                    <p>Not available</p>
+                {% endif %}
+            </div>
+
+            <div class="stat-box">
+                <h3>Lean Mass</h3>
+                <p>{{ lean_mass }} kg</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>BMI</h3>
+                <p>{{ bmi }}</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Goal -->
+    <div class="section">
+        <h2>Current Goal</h2>
+
+        <div class="goal-box">
+            <h3>{{ goal }}</h3>
+        </div>
+    </div>
+
+    <!-- Nutrition -->
+    <div class="section">
+
+        <h2>Nutrition Targets</h2>
+
+        <div class="stats-grid">
+
+            <div class="stat-box">
+                <h3>Calories</h3>
+                <p>{{ rec_calories }}</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Protein</h3>
+                <p>{{ rec_protein }} g</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Carbs</h3>
+                <p>{{ rec_carbs }} g</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Fats</h3>
+                <p>{{ rec_fats }} g</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Training -->
+    <div class="section">
+
+        <h2>Training Plan</h2>
+
+        <div class="training-box">
+            <p>{{ training_plan }}</p>
+        </div>
+
+    </div>
+
+    <!-- Weekly Progress -->
+    <div class="section">
+
+        <h2>Weekly Progress</h2>
+
+        <div class="stats-grid">
+
+            <div class="stat-box">
+                <h3>Weight Change</h3>
+                <p>{{ weight_change }} kg/week</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Body Fat Change</h3>
+                <p>{{ bf_change }} %/week</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Average Sleep</h3>
+                <p>{{ avg_sleep }} hrs</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section">
+
+        <h2>Quick Actions</h2>
+
+        <div class="button-group">
+
+            <a href="/dailyinfo" class="action-button">
+                Add Today's Info
+            </a>
+
+            <a href="/userinfo" class="action-button">
+                Update Personal Info
+            </a>
+
+            <a href="/mydata" class="action-button">
+                My Data
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

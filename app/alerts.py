@@ -1,4 +1,4 @@
-from utils import get_db, get_days_since_goal, get_1rm, get_intensity, avg_field, get_avg_weekly_weight_change, get_avg_weekly_bf_change, get_avg, is_metric_increasing, get_diet_rec, get_macro_bounds
+from app.utils import get_db, get_days_since_goal, get_1rm, get_intensity, avg_field, get_avg_weekly_weight_change, get_avg_weekly_bf_change, get_avg, is_metric_increasing, get_diet_rec, get_macro_bounds
 from config import alert_strings, weights_goals, cardio_goals, weekly_weight_change_kg, data_flags, bf_boundaries
 from datetime import datetime, timedelta, date
 from flask import session
@@ -211,121 +211,14 @@ def collect_alert_data():
         sleep_history.append(row["sleep"] if row else avg_sleep)
         micros_ok_history.append(row["micros_ok"] if row else avg_micros_ok)
 
-    # Fetches weight values
-    today = date.today()
-    window_start = date.fromisoformat(goal_set_date) if goal_set_date else today
-    if (today - window_start).days > 20:
-        window_start = today - timedelta(days=20)
-
-    cursor.execute(
-        """
-        SELECT date, weight
-        FROM daily_logs
-        WHERE user_id = ? AND date >= ?
-        ORDER BY date ASC
-        """,
-        (session["user_id"], window_start.isoformat())
-    )
-    rows = cursor.fetchall()
-
-    if not rows:
-        weight_history = []
-    else:
-        logs_by_date = {row["date"]: row["weight"] for row in rows}
-
-        start_date = date.fromisoformat(rows[0]["date"])
-        end_date = date.fromisoformat(rows[-1]["date"])
-        known_dates = sorted(logs_by_date.keys())
-
-        weight_history = []
-        current_date = start_date
-
-        while current_date <= end_date:
-            date_str = current_date.isoformat()
-
-            if date_str in logs_by_date:
-                weight_history.append(logs_by_date[date_str])
-            else:
-                prev_str = max((d for d in known_dates if d < date_str), default=None)
-                next_str = min((d for d in known_dates if d > date_str), default=None)
-
-                if prev_str and next_str:
-                    prev_date = date.fromisoformat(prev_str)
-                    next_date = date.fromisoformat(next_str)
-                    prev_val = logs_by_date[prev_str]
-                    next_val = logs_by_date[next_str]
-
-                    total_gap_days = (next_date - prev_date).days
-                    days_from_prev = (current_date - prev_date).days
-                    interpolated = prev_val + (next_val - prev_val) * (
-                            days_from_prev / total_gap_days
-                    )
-
-                    weight_history.append(interpolated)
-
-            current_date += timedelta(days=1)
-
-    #Fetches body fat % data
-    bf_window_start = date.fromisoformat(goal_set_date) if goal_set_date else today
-    if (today - bf_window_start).days > 28:
-        bf_window_start = today - timedelta(days=28)
-
-    cursor.execute(
-        """
-        SELECT date, body_fat_percent
-        FROM bf_calc
-        WHERE user_id = ? AND date >= ?
-        ORDER BY date ASC
-        """,
-        (session["user_id"], bf_window_start.isoformat())
-    )
-    rows = cursor.fetchall()
-
-    if not rows:
-        bf_history = []
-    else:
-        bf_by_date = {row["date"]: row["body_fat_percent"] for row in rows}
-        known_dates = sorted(bf_by_date.keys())
-
-        start_date = date.fromisoformat(known_dates[0])
-        end_date = date.fromisoformat(known_dates[-1])
-
-        daily_bf = {}
-        current_date = start_date
-        while current_date <= end_date:
-            date_str = current_date.isoformat()
-            if date_str in bf_by_date:
-                daily_bf[date_str] = bf_by_date[date_str]
-            else:
-                prev_str = max(d for d in known_dates if d < date_str)
-                next_str = min(d for d in known_dates if d > date_str)
-
-                prev_date = date.fromisoformat(prev_str)
-                next_date = date.fromisoformat(next_str)
-                prev_val = bf_by_date[prev_str]
-                next_val = bf_by_date[next_str]
-
-                total_gap_days = (next_date - prev_date).days
-                days_from_prev = (current_date - prev_date).days
-                daily_bf[date_str] = prev_val + (next_val - prev_val) * (days_from_prev / total_gap_days)
-
-            current_date += timedelta(days=1)
-
-        bf_history = []
-        sample_date = start_date
-        while sample_date <= end_date:
-            bf_history.append(daily_bf[sample_date.isoformat()])
-            sample_date += timedelta(days=7)
-
-    #Get data needed to calculate recommended daily macronutrients
+    # Gets calorie adjustment data
     cursor.execute("""
-        SELECT gender, height, weight, age, bf_category, muscle_category,
-               calorie_adjustment, cal_adjustment_date
+        SELECT calorie_adjustment, cal_adjustment_date
         FROM user_stats
         WHERE user_id = ?
     """, (session["user_id"],))
 
-    gender, height, weight, age, bf_category, muscle_category, calorie_adjustment, cal_adjustment_date = cursor.fetchone()
+    calorie_adjustment, cal_adjustment_date = cursor.fetchone()
 
     db.close()
 
@@ -341,14 +234,6 @@ def collect_alert_data():
         "fats_history": fats_history,
         "sleep_history": sleep_history,
         "micros_ok_history": micros_ok_history,
-        "weight_history": weight_history,
-        "bf_history": bf_history,
-        "gender": gender,
-        "height": height,
-        "weight": weight,
-        "age": age,
-        "bf_category": bf_category,
-        "muscle_category": muscle_category,
         "cal_adjustment": calorie_adjustment,
         "cal_adjustment_date": cal_adjustment_date,
         "user_id": session["user_id"]
@@ -373,8 +258,8 @@ def manual_feedback(data):
         return alerts
 
     #Process data for evaluation
-    avg_weekly_weight_change = get_avg_weekly_weight_change(data["weight_history"])
-    avg_weekly_bf_change = get_avg_weekly_bf_change(data["bf_history"])
+    avg_weekly_weight_change = get_avg_weekly_weight_change()
+    avg_weekly_bf_change = get_avg_weekly_bf_change()
     avg_calories = get_avg(data["calories_history"])
     avg_protein = get_avg(data["protein_history"])
     avg_carbs = get_avg(data["carbs_history"])
@@ -385,10 +270,7 @@ def manual_feedback(data):
     distance_progress = is_metric_increasing(data["distance_history"])
     intensity_progress = is_metric_increasing(data["intensity_history"])
     goal = data["goal"]
-    gender = data["gender"]
-    weight = data["weight"]
-    height = data["height"]
-    age = data["age"]
+
     if avg_weekly_bf_change is not None:
         if avg_weekly_bf_change < bf_boundaries["upper"] and avg_weekly_bf_change > bf_boundaries["lower"]:
             bf_change = 2
@@ -400,7 +282,7 @@ def manual_feedback(data):
         bf_change = None
 
     #Get recommended macros ranges
-    diet_rec = get_diet_rec(goal, gender, weight, height, age, data["bf_category"], data["muscle_category"], data["cal_adjustment"], activity_multiplier=1.55)
+    diet_rec = get_diet_rec()
     diet_boundaries = get_macro_bounds(diet_rec)
 
     #Checks for any major issues that make analysis difficult
