@@ -44,6 +44,7 @@ increasing_score_thresholds = {
 
 #String given to user when issue is flagged
 alert_strings = {
+    "NewAccount": "Alerts will appear here if you have any issues",
     "NED":"Log data more consistently", "NWE": "Workout more often",
     "NEW":"Lift weights more often", "NEC": "Do more cardio",
     "TooLittleCals": "Eat more calories",
@@ -61,7 +62,8 @@ alert_strings = {
     "StrengthNoGainIssue": "You are not gaining strength",
     "StrengthNoMaintainIssue": "You are not maintaining strength well",
     "DistanceIssue": "You are decreasing the distance you cover",
-    "IntensityIssue": "You are working with less intensity"
+    "IntensityIssue": "You are working with less intensity",
+    "NoAlerts": "You are on track to reach your goal"
 }
 
 #Sorts the different goals on type of exercise required

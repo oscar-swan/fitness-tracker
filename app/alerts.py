@@ -11,6 +11,23 @@ def collect_alert_data():
     db = get_db()
     cursor = db.cursor()
 
+    # Check if the account was created less than 2 days ago
+    cursor.execute(
+        "SELECT created_at FROM users WHERE user_id = ?",
+        (session["user_id"],)
+    )
+    row = cursor.fetchone()
+    created_at = row["created_at"] if row else None
+
+    if created_at:
+        cursor.execute(
+            "SELECT julianday('now') - julianday(?) AS days_since_created",
+            (created_at,)
+        )
+        days_since_created = cursor.fetchone()["days_since_created"]
+        if days_since_created < 2:
+            return "NewAccount"
+
     cursor.execute(
         "SELECT goal_set_date, goal FROM user_stats WHERE user_id = ?",
         (session["user_id"],)
@@ -244,6 +261,9 @@ def manual_feedback(data):
     """Processes and analyses user data"""
     #Alert to refuse feedback if issue with user's consistency with data logging or working out
     alerts = []
+    if data == "NewAccount":
+        alerts.append(alert_strings["NewAccount"])
+        return alerts
     if data == "NED":
         alerts.append(alert_strings["NED"])
         return alerts
@@ -374,5 +394,8 @@ def manual_feedback(data):
         alerts.append(alert_strings["DistanceIssue"])
     if "intensity" in bounds and intensity_progress not in bounds["intensity"]:
         alerts.append(alert_strings["IntensityIssue"])
+
+    if len(alerts) == 0:
+        alerts.append(alert_strings["NoAlerts"])
 
     return alerts
