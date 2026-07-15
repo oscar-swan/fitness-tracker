@@ -46,14 +46,26 @@
                 {% endif %}
             </div>
 
-            <div class="stat-box">
+           <div class="stat-box">
                 <h3>Lean Mass</h3>
-                <p>{{ lean_mass }} kg</p>
+
+                {% if lean_mass is not none %}
+                    <p>{{ lean_mass }} kg</p>
+                {% else %}
+                    <p>Not available</p>
+                {% endif %}
+
             </div>
 
             <div class="stat-box">
                 <h3>BMI</h3>
-                <p>{{ bmi }}</p>
+
+                {% if bmi is not none %}
+                    <p>{{ bmi }}</p>
+                {% else %}
+                    <p>Not available</p>
+                {% endif %}
+
             </div>
 
         </div>

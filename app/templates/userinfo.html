@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Info</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+ <h1>Personal Data</h1>
+ <form action="/userinfo" method="post">
+
+   <label for="height">Height (cm):</label>
+    <input type="number" id="height" name="height" value="{{ height }}" min="50" max="300" step="0.1" required><br><br>
+
+   <label for="weight">Weight (kg):</label>
+    <input type="number" id="weight" name="weight" value="{{ weight }}" min="30" max="300" step="0.1" required><br><br>
+
+   <label for="age">Age:</label>
+    <input type="number" id="age" name="age" value="{{ age }}" min="1" max="150" required><br><br>
+
+   <label for="gender">Gender:</label>
+    <select name="gender" id="gender" required>
+      <option value="male" {% if gender == "male" %}selected{% endif %}>Male</option>
+      <option value="female" {% if gender == "female" %}selected{% endif %}>Female</option>
+    </select><br><br>
+
+   <label for="bfa">Body Fat Amount (Optional):</label>
+    <select name="bfa" id="bfa">
+        <option value="" {% if not bfa %}selected{% endif %}>-- Select --</option>
+        <option value="low" {% if bfa == "low" %}selected{% endif %}>Low</option>
+        <option value="medium" {% if bfa == "medium" %}selected{% endif %}>Medium</option>
+        <option value="high" {% if bfa == "high" %}selected{% endif %}>High</option>
+    </select><br><br>
+
+   <label for="mma">Muscle Mass Amount (Optional):</label>
+    <select name="mma" id="mma">
+        <option value="" {% if not mma %}selected{% endif %}>-- Select --</option>
+        <option value="low" {% if mma == "low" %}selected{% endif %}>Low</option>
+        <option value="medium" {% if mma == "medium" %}selected{% endif %}>Medium</option>
+        <option value="high" {% if mma == "high" %}selected{% endif %}>High</option>
+    </select><br><br>
+
+   <label for="goal">Your Goal:</label>
+    <select name="goal" id="goal" required>
+        <option value="hypertrophy" {% if goal == "hypertrophy" %}selected{% endif %}>Mass Gain (Hypertrophy)</option>
+        <option value="cut" {% if goal == "cut" %}selected{% endif %}>Cut</option>
+        <option value="fat_loss" {% if goal == "fat_loss" %}selected{% endif %}>Fat Loss</option>
+        <option value="recomp" {% if goal == "recomp" %}selected{% endif %}>Recomp</option>
+        <option value="strength_gain" {% if goal == "strength_gain" %}selected{% endif %}>Strength Gain</option>
+        <option value="endurance" {% if goal == "endurance" %}selected{% endif %}>Endurance</option>
+    </select><br><br>
+
+   <button type="submit">Submit Data</button>
+
+ </form>
+
+</body>
+</html>

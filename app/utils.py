@@ -130,13 +130,16 @@ def get_bmi():
     weight = row["weight"]
     height = row["height"]
     db.close()
-
+    if weight is None or height is None:
+        return None
     height_m = height / 100
     bmi = round(weight / (height_m ** 2), 1)
     return bmi
 
 def get_lean_body_mass(weight, bf):
     """Returns lean body weight"""
+    if weight is None or bf is None:
+        return None
     return round(weight * (1 - (bf / 100)), 2)
 
 def get_avg(lst):
@@ -301,9 +304,11 @@ def get_goal_set_date():
                     WHERE user_id = ?
                 """, (session["user_id"],))
 
-    goal_set_date = cursor.fetchone()
+    row = cursor.fetchone()
     db.close()
-    return goal_set_date
+    if row is None:
+        return None
+    return row["goal_set_date"]
 
 def get_avg_weekly_weight_change():
     """Finds weekly weight change over a period of time using weekly averages if enough data"""
