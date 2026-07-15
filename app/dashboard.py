@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect, session
 from app.alerts import collect_alert_data, manual_feedback
 from app.utils import get_training_plan, get_current_weight, get_current_bf, get_bmi, get_lean_body_mass, get_db, \
     get_diet_rec, get_goal, get_avg_sleep, get_avg_weekly_weight_change, get_avg_weekly_bf_change
+from config import goal_display_names
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -34,6 +35,7 @@ def dashboard():
     bmi = get_bmi()
     lean_mass = get_lean_body_mass(weight, bf)
     goal = get_goal()
+    goal = goal_display_names[goal]
     avg_sleep = get_avg_sleep()
     weight_change = get_avg_weekly_weight_change()
     bf_change = get_avg_weekly_bf_change()

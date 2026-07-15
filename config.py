@@ -101,3 +101,12 @@ data_flags = {
 bf_boundaries= {
     "upper":0.1, "lower":-0.1
 }
+
+goal_display_names = {
+    "hypertrophy": "Hypertrophy",
+    "fat_loss": "Fat Loss",
+    "strength_gain": "Strength Gain",
+    "endurance": "Endurance",
+    "recomp": "Recomp",
+    "cut": "Cut"
+}
