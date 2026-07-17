@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="demo-select">
+  <h1>Choose a demo account</h1>
+  <p>Pick a character to explore the app with pre-filled history.</p>
+
+  <div class="demo-grid">
+    {% for user_id, char in demo_characters.items() %}
+    <form method="POST" class="demo-card-form">
+      <input type="hidden" name="user_id" value="{{ user_id }}">
+
+      <button type="submit" class="demo-card">
+        <h2>{{ char.name }}</h2>
+        <p class="demo-type">{{ char.demo_type }}</p>
+
+        <dl class="demo-stats">
+          <dt>Goal</dt><dd>{{ char.stats.goal.replace('_', ' ') }}</dd>
+          <dt>Age</dt><dd>{{ char.stats.age }}</dd>
+          <dt>Weight</dt><dd>{{ char.stats.weight }} kg</dd>
+        </dl>
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

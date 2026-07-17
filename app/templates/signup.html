@@ -1,19 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sign Up</title>
-</head>
-<body>
-    <h1>Sign Up</h1>
-    {% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
-    <form action="/signup" method="POST">
-        <label>Email</label>
-        <input type="email" name="email" required><br>
-        <label>Password</label>
-        <input type="password" name="password" required minlength="8"><br>
-        <button type="submit">Create Account</button>
-    </form>
-    <p>Already have an account? <a href="/login">Log in</a></p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<h1>Sign Up</h1>
+{% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
+<form action="/signup" method="POST">
+    <label>Email</label>
+    <input type="email" name="email" required><br>
+    <label>Password</label>
+    <input type="password" name="password" required minlength="8"><br>
+    <button type="submit">Create Account</button>
+</form>
+<p>Already have an account? <a href="/login">Log in</a></p>
+{% endblock %}

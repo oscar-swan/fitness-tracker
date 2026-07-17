@@ -56,13 +56,13 @@ alert_strings = {
     "TooLittleFats": "Eat more fats",
     "TooManyFats": "Eat less fats",
     "TooLittleMicros": "Eat more micronutrients",
-    "TooLittleSleep": "Sleep at least 8 hours a day",
+    "TooLittleSleep": "Aim for at least 8 hours sleep a day",
     "BfNoLossIssue": "You are not losing body fat",
     "BfNoGainIssue": "You are not gaining body fat",
     "StrengthNoGainIssue": "You are not gaining strength",
     "StrengthNoMaintainIssue": "You are not maintaining strength well",
     "DistanceIssue": "You are decreasing the distance you cover",
-    "IntensityIssue": "You are working with less intensity",
+    "IntensityIssue": "You need to increase workout intensity",
     "NoAlerts": "You are on track to reach your goal"
 }
 
@@ -110,3 +110,71 @@ goal_display_names = {
     "recomp": "Recomp",
     "cut": "Cut"
 }
+
+#Info about each demo character
+demo_characters = {
+    9001: {
+        "name": "Marcus",
+        "demo_type": "Hypertrophy, on track to goal",
+        "stats": {
+            "height": 180, "weight": 82, "age": 24, "gender": "Male",
+            "bf_category": "Medium", "muscle_category": "Medium", "goal": "hypertrophy"
+        },
+        "cal_adjustment": 0,
+    },
+    9002: {
+        "name": "Mildred",
+        "demo_type": "Hypertrophy, several issues",
+        "stats": {
+            "height": 165, "weight": 58, "age": 29, "gender": "Female",
+            "bf_category": "Low", "muscle_category": "Low", "goal": "hypertrophy"
+        },
+        "cal_adjustment": 200,
+    },
+    9003: {
+        "name": "Ken",
+        "demo_type": "Fat loss, eats too many calories",
+        "stats": {
+            "height": 178, "weight": 95, "age": 35, "gender": "Male",
+            "bf_category": "High", "muscle_category": "Medium", "goal": "fat_loss"
+        },
+        "cal_adjustment": 0,
+    },
+    9004: {
+        "name": "Cornelius",
+        "demo_type": "Fat loss, not doing enough cardio",
+        "stats": {
+            "height": 170, "weight": 78, "age": 31, "gender": "Male",
+            "bf_category": "High", "muscle_category": "Low", "goal": "fat_loss"
+        },
+        "cal_adjustment": 0,
+    },
+    9005: {
+        "name": "Sam",
+        "demo_type": "Endurance, does not eat micronutrients or work out hard enough",
+        "stats": {
+            "height": 175, "weight": 70, "age": 27, "gender": "Male",
+            "bf_category": "Medium", "muscle_category": "Medium", "goal": "endurance"
+        },
+        "cal_adjustment": 0,
+    },
+    9006: {
+        "name": "Grover",
+        "demo_type": "Endurance, does not log data",
+        "stats": {
+            "height": 180, "weight": 69, "age": 22, "gender": "Male",
+            "bf_category": "Medium", "muscle_category": "Low", "goal": "endurance"
+        },
+        "cal_adjustment": 0,
+    },
+}
+
+#How many days of data to generate for demo characters
+demo_history_days = 28
+
+#Exercises to use for demo accounts
+weights_exercises = ["Bench Press", "Squat", "Deadlift", "Overhead Press", "Barbell Row"]
+cardio_activities = ["running", "cycling", "rowing"]
+
+#Activity multiplier
+activity_multiplier = 1.55

@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, session
+from flask import Blueprint, render_template, request, redirect, session, url_for, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.utils import get_db
+from config import demo_characters
+from seed import reset_and_seed_character
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -63,6 +65,17 @@ def login():
             error = "Incorrect email or password."
 
     return render_template("login.html", error=error)
+
+@auth_bp.route("/demoselect", methods=["GET", "POST"])
+def demoselect():
+    if request.method == "POST":
+        user_id = int(request.form["user_id"])
+        reset_and_seed_character(user_id)
+        session["user_id"] = user_id
+        session["is_demo"] = True
+        return redirect("/dashboard")
+
+    return render_template("demo.html", demo_characters=demo_characters)
 
 @auth_bp.route("/logout")
 def logout():

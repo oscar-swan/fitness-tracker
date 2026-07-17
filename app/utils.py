@@ -256,7 +256,7 @@ def get_current_weight():
     current_weight = row["avg_weight"]
 
     db.close()
-    return current_weight
+    return round(current_weight, 2) if current_weight is not None else None
 
 def get_current_bf():
     """Returns the user's current body fat %"""
@@ -484,7 +484,7 @@ def get_avg_sleep():
     rows = cursor.fetchall()
     db.close()
     avg_sleep = get_avg([row["sleep"] for row in rows])
-    return avg_sleep
+    return round(avg_sleep, 1) if avg_sleep is not None else None
 
 """
 if __name__ == '__main__':

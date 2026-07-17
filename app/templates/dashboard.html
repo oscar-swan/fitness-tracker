@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
+{% block title %}Dashboard{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
 <div class="dashboard-container">
 
     <h1 class="dashboard-header">Dashboard</h1>
@@ -24,7 +24,7 @@
             <p>You're progressing correctly. No issues found.</p>
         {% endif %}
     </div>
-</div>
+    </div>
 
     <!-- Current Stats -->
     <div class="section">
@@ -46,26 +46,22 @@
                 {% endif %}
             </div>
 
-           <div class="stat-box">
+            <div class="stat-box">
                 <h3>Lean Mass</h3>
-
                 {% if lean_mass is not none %}
                     <p>{{ lean_mass }} kg</p>
                 {% else %}
                     <p>Not available</p>
                 {% endif %}
-
             </div>
 
             <div class="stat-box">
                 <h3>BMI</h3>
-
                 {% if bmi is not none %}
                     <p>{{ bmi }}</p>
                 {% else %}
                     <p>Not available</p>
                 {% endif %}
-
             </div>
 
         </div>
@@ -172,6 +168,4 @@
     </div>
 
 </div>
-
-</body>
-</html>
+{% endblock %}

@@ -18,7 +18,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             user_id   INTEGER PRIMARY KEY AUTOINCREMENT,
             email     TEXT    UNIQUE NOT NULL,
-            password  TEXT    NOT NULL,
+            password  TEXT,
             is_demo   INTEGER DEFAULT 0,   -- 1 for seeded demo accounts
             created_at TEXT   DEFAULT (DATE('now'))
         )
@@ -38,8 +38,8 @@ def init_db():
             weight              REAL,
             age                 INTEGER,
             gender              TEXT,
-            goal                TEXT,   -- massgain | cut | fatloss | recomp |
-                                        --   powerlifting | endurance
+            goal                TEXT,   -- hypertrophy | cut | fat_loss | recomp |
+                                        --   strength_gain | endurance
             goal_set_date       TEXT,
             experience          TEXT,   -- beginner | intermediate | advanced
             bf_category         TEXT,   -- low | medium | high (optional, for TDEE tweak)

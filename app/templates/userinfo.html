@@ -1,19 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Info</title>
+{% extends "base.html" %}
+
+{% block title %}User Info{% endblock %}
+
+{% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
- <h1>Personal Data</h1>
- <form action="/userinfo" method="post">
+{% endblock %}
+
+{% block content %}
+<h1>Personal Data</h1>
+<form action="/userinfo" method="post">
 
    <label for="height">Height (cm):</label>
     <input type="number" id="height" name="height" value="{{ height }}" min="50" max="300" step="0.1" required><br><br>
 
    <label for="weight">Weight (kg):</label>
-    <input type="number" id="weight" name="weight" value="{{ weight }}" min="30" max="300" step="0.1" required><br><br>
+    <input type="number" id="weight" name="weight" value="{{ weight }}" min="30" max="300" step="0.01" required><br><br>
 
    <label for="age">Age:</label>
     <input type="number" id="age" name="age" value="{{ age }}" min="1" max="150" required><br><br>
@@ -52,7 +53,5 @@
 
    <button type="submit">Submit Data</button>
 
- </form>
-
-</body>
-</html>
+</form>
+{% endblock %}

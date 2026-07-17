@@ -316,51 +316,50 @@ def manual_feedback(data):
     if avg_protein < diet_boundaries["protein"]["lower"]:
         alerts.append(alert_strings["TooLittleProtein"])
         serious_flag = 1
-    if serious_flag == 1:
-        return alerts
 
     #Adjusts calorie adjustment value if recommended calories are not working for the user
-    if avg_weekly_weight_change is not None:
-        weight_bounds = weekly_weight_change_kg[goal]
-        if avg_weekly_weight_change < weight_bounds["lower"]:
-            discrepancy = weight_bounds["lower"] - avg_weekly_weight_change
-            direction = 1
-        elif avg_weekly_weight_change > weight_bounds["upper"]:
-            discrepancy = avg_weekly_weight_change - weight_bounds["upper"]
-            direction = -1
-        else:
-            discrepancy = 0
-            direction = 0
-        if direction != 0:
-            if discrepancy < 0.15:
-                adjustment = 150
-            elif discrepancy < 0.3:
-                adjustment = 200
+    if serious_flag != 1:
+        if avg_weekly_weight_change is not None:
+            weight_bounds = weekly_weight_change_kg[goal]
+            if avg_weekly_weight_change < weight_bounds["lower"]:
+                discrepancy = weight_bounds["lower"] - avg_weekly_weight_change
+                direction = 1
+            elif avg_weekly_weight_change > weight_bounds["upper"]:
+                discrepancy = avg_weekly_weight_change - weight_bounds["upper"]
+                direction = -1
             else:
-                adjustment = 300
+                discrepancy = 0
+                direction = 0
+            if direction != 0:
+                if discrepancy < 0.15:
+                    adjustment = 150
+                elif discrepancy < 0.3:
+                    adjustment = 200
+                else:
+                    adjustment = 300
 
-            new_cal_adjustment = data["cal_adjustment"] + (direction * adjustment)
-            if new_cal_adjustment != data["cal_adjustment"]:
-                cooldown_passed = (
-                        data["cal_adjustment_date"] is None
-                        or datetime.now() - datetime.fromisoformat(data["cal_adjustment_date"]) >= timedelta(days=14)
-                )
+                new_cal_adjustment = data["cal_adjustment"] + (direction * adjustment)
+                if new_cal_adjustment != data["cal_adjustment"]:
+                    cooldown_passed = (
+                            data["cal_adjustment_date"] is None
+                            or datetime.now() - datetime.fromisoformat(data["cal_adjustment_date"]) >= timedelta(days=14)
+                    )
 
-                if cooldown_passed:
-                    today_str = datetime.now().isoformat()
+                    if cooldown_passed:
+                        today_str = datetime.now().isoformat()
 
-                    db = get_db()
-                    cursor = db.cursor()
-                    cursor.execute("""
-                        UPDATE user_stats
-                        SET calorie_adjustment = ?, cal_adjustment_date = ?
-                        WHERE user_id = ?
-                    """, (new_cal_adjustment, today_str, data["user_id"]))
-                    db.commit()
-                    db.close()
+                        db = get_db()
+                        cursor = db.cursor()
+                        cursor.execute("""
+                            UPDATE user_stats
+                            SET calorie_adjustment = ?, cal_adjustment_date = ?
+                            WHERE user_id = ?
+                        """, (new_cal_adjustment, today_str, data["user_id"]))
+                        db.commit()
+                        db.close()
 
-                    data["cal_adjustment"] = new_cal_adjustment
-                    data["cal_adjustment_date"] = today_str
+                        data["cal_adjustment"] = new_cal_adjustment
+                        data["cal_adjustment_date"] = today_str
 
     #Analyses user data to spot issues
 
