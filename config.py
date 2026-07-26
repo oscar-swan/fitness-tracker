@@ -117,7 +117,7 @@ demo_characters = {
         "name": "Marcus",
         "demo_type": "Hypertrophy, on track to goal",
         "stats": {
-            "height": 180, "weight": 82, "age": 24, "gender": "Male",
+            "height": 180, "weight": 82, "age": 24, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Medium", "goal": "hypertrophy"
         },
         "cal_adjustment": 0,
@@ -126,7 +126,7 @@ demo_characters = {
         "name": "Mildred",
         "demo_type": "Hypertrophy, several issues",
         "stats": {
-            "height": 165, "weight": 58, "age": 29, "gender": "Female",
+            "height": 165, "weight": 58, "age": 29, "gender": "female",
             "bf_category": "Low", "muscle_category": "Low", "goal": "hypertrophy"
         },
         "cal_adjustment": 200,
@@ -135,7 +135,7 @@ demo_characters = {
         "name": "Ken",
         "demo_type": "Fat loss, eats too many calories",
         "stats": {
-            "height": 178, "weight": 95, "age": 35, "gender": "Male",
+            "height": 178, "weight": 95, "age": 35, "gender": "male",
             "bf_category": "High", "muscle_category": "Medium", "goal": "fat_loss"
         },
         "cal_adjustment": 0,
@@ -144,7 +144,7 @@ demo_characters = {
         "name": "Cornelius",
         "demo_type": "Fat loss, not doing enough cardio",
         "stats": {
-            "height": 170, "weight": 78, "age": 31, "gender": "Male",
+            "height": 170, "weight": 78, "age": 31, "gender": "male",
             "bf_category": "High", "muscle_category": "Low", "goal": "fat_loss"
         },
         "cal_adjustment": 0,
@@ -153,7 +153,7 @@ demo_characters = {
         "name": "Sam",
         "demo_type": "Endurance, does not eat micronutrients or work out hard enough",
         "stats": {
-            "height": 175, "weight": 70, "age": 27, "gender": "Male",
+            "height": 175, "weight": 70, "age": 27, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Medium", "goal": "endurance"
         },
         "cal_adjustment": 0,
@@ -162,7 +162,7 @@ demo_characters = {
         "name": "Grover",
         "demo_type": "Endurance, does not log data",
         "stats": {
-            "height": 180, "weight": 69, "age": 22, "gender": "Male",
+            "height": 180, "weight": 69, "age": 22, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Low", "goal": "endurance"
         },
         "cal_adjustment": 0,
@@ -173,8 +173,37 @@ demo_characters = {
 demo_history_days = 28
 
 #Exercises to use for demo accounts
-weights_exercises = ["Bench Press", "Squat", "Deadlift", "Overhead Press", "Barbell Row"]
+weights_exercises = ["bench press", "squat", "deadlift", "overhead press", "barbell row"]
 cardio_activities = ["running", "cycling", "rowing"]
 
 #Activity multiplier
 activity_multiplier = 1.55
+
+#Workout types that can be logged
+valid_workout_types = {"none", "weights", "cardio", "both"}
+
+#Prompt to get claude to turn user weight lifting input into data
+weights_claude_prompt = """You are a fitness data extraction assistant. The user describes a weight
+training workout in free text, covering one or several exercises.
+
+Extract each distinct exercise into a JSON array. Each object must have:
+- exercise_name (string)
+- weight_kg (number, convert lbs to kg if needed, null if not mentioned)
+- sets (integer, null if not mentioned)
+- reps (integer, null if not mentioned)
+- rpe (number 1-10, null if not mentioned)
+
+Respond with ONLY a JSON array. No markdown fences, no other text. If nothing
+resembling a weights exercise is described, respond with []."""
+
+#Prompt to get claude to turn user cardio input into data
+cardio_claude_prompt = """You are a fitness data extraction assistant. The user describes cardio
+activity in free text, covering one or several activities.
+
+Extract each distinct activity into a JSON array. Each object must have:
+- activity_name (string)
+- distance_km (number, convert miles to km if needed, null if not mentioned)
+- duration_min (number, null if not mentioned)
+
+Respond with ONLY a JSON array. No markdown fences, no other text. If nothing
+resembling cardio is described, respond with []."""

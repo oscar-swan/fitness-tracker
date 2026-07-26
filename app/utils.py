@@ -3,6 +3,9 @@ import os
 import math
 from datetime import datetime
 from config import tdee_adjustments, protein_multipliers, plans, cal_goal_adjustments, fat_pct_of_calories, increasing_score_thresholds, macro_tolerance
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "fitness_tracker.db")
 
@@ -326,7 +329,7 @@ def get_avg_weekly_weight_change():
         """
         SELECT date, weight
         FROM daily_logs
-        WHERE user_id = ? AND date >= ?
+        WHERE user_id = ? AND date >= ? AND weight IS NOT NULL
         ORDER BY date ASC
         """,
         (session["user_id"], window_start.isoformat())
@@ -485,6 +488,86 @@ def get_avg_sleep():
     db.close()
     avg_sleep = get_avg([row["sleep"] for row in rows])
     return round(avg_sleep, 1) if avg_sleep is not None else None
+
+def parse_weights_text(raw_text):
+    from config import weights_claude_prompt
+    if not raw_text or not raw_text.strip():
+        return []
+    return call_claude(weights_claude_prompt, raw_text)
+
+
+def parse_cardio_text(raw_text):
+    from config import cardio_claude_prompt
+    if not raw_text or not raw_text.strip():
+        return []
+    return call_claude(cardio_claude_prompt, raw_text)
+
+def valid_weight_exercise(ex):
+    return (
+        ex.get("exercise_name")
+        and ex.get("weight_kg") is not None
+        and ex.get("reps") is not None
+    )
+
+def valid_cardio_exercise(ex):
+    return (
+        ex.get("activity_name")
+        and ex.get("distance_km") is not None
+        and ex.get("duration_min") is not None
+    )
+
+def call_claude(system_prompt, user_text):
+    import json
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_text}],
+    )
+    text = "".join(block.text for block in response.content if block.type == "text").strip()
+
+    if text.startswith("```"):
+        text = text.strip("`").lstrip("json").strip()
+
+    try:
+        parsed = json.loads(text)
+        return parsed if isinstance(parsed, list) else []
+    except (json.JSONDecodeError, ValueError):
+        return []
+
+def bf_measurement_due(user_id):
+    from datetime import date as date_cls
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        "SELECT MAX(date) as last_date FROM bf_calc WHERE user_id = ?",
+        (user_id,)
+    )
+    last_bf_row = cursor.fetchone()
+    last_bf_date = last_bf_row["last_date"] if last_bf_row else None
+
+    cursor.execute("SELECT created_at FROM users WHERE user_id = ?", (user_id,))
+    user_row = cursor.fetchone()
+    db.close()
+
+    if not user_row:
+        return False
+
+    created_at = date_cls.fromisoformat(user_row["created_at"][:10])
+    today = date_cls.today()
+
+    if last_bf_date is None:
+        return True
+
+    last_date = date_cls.fromisoformat(last_bf_date)
+    if (today - last_date).days >= 7:
+        return True
+
+    if (today - created_at).days % 7 == 0:
+        return True
+
+    return False
 
 """
 if __name__ == '__main__':
