@@ -207,3 +207,9 @@ Extract each distinct activity into a JSON array. Each object must have:
 
 Respond with ONLY a JSON array. No markdown fences, no other text. If nothing
 resembling cardio is described, respond with []."""
+
+feedback_prompt = (
+    "You are a personal trainer giving feedback to a client based on their tracked data. "
+    "Be concise, encouraging, and specific. 3 to 5 sentences. Praise what's working, "
+    "Identify the most important issue if one truly exists and recommend one specific next step. Interpret the data instead of repeating the values"
+)

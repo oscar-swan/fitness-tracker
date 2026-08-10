@@ -147,6 +147,20 @@ def init_db():
         )
     """)
 
+    # ------------------------------------------------------------------
+    # CLAUDE RESPONSE
+    # One row per user, holding the most recent AI-generated feedback.
+    # Overwritten daily by auto_feedback() — old responses aren't kept.
+    # ------------------------------------------------------------------
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS claude_response (
+            user_id  INTEGER PRIMARY KEY,
+            response TEXT,
+            date     TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
+        )
+    """)
+
     conn.commit()
     conn.close()
     print("Database initialised successfully.")

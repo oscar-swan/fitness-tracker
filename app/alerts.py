@@ -1,5 +1,5 @@
-from app.utils import get_db, get_days_since_goal, get_1rm, get_intensity, avg_field, get_avg_weekly_weight_change, get_avg_weekly_bf_change, get_avg, is_metric_increasing, get_diet_rec, get_macro_bounds
-from config import alert_strings, weights_goals, cardio_goals, weekly_weight_change_kg, data_flags, bf_boundaries
+from app.utils import get_db, get_days_since_goal, get_1rm, get_intensity, avg_field, get_avg_weekly_weight_change, get_avg_weekly_bf_change, get_avg, is_metric_increasing, get_diet_rec, get_macro_bounds, call_claude_feedback, progress_label, is_demo_user
+from config import alert_strings, weights_goals, cardio_goals, weekly_weight_change_kg, data_flags, bf_boundaries, feedback_prompt
 from datetime import datetime, timedelta, date
 from flask import session
 
@@ -237,6 +237,15 @@ def collect_alert_data():
 
     calorie_adjustment, cal_adjustment_date = cursor.fetchone()
 
+    # Gets user profile data
+    cursor.execute("""
+        SELECT height, weight, age, gender
+        FROM user_stats
+        WHERE user_id = ?
+    """, (session["user_id"],))
+
+    height, weight, age, gender = cursor.fetchone()
+
     db.close()
 
     return {
@@ -253,6 +262,10 @@ def collect_alert_data():
         "micros_ok_history": micros_ok_history,
         "cal_adjustment": calorie_adjustment,
         "cal_adjustment_date": cal_adjustment_date,
+        "height": height,
+        "weight": weight,
+        "age": age,
+        "gender": gender,
         "user_id": session["user_id"]
     }
 
@@ -398,3 +411,100 @@ def manual_feedback(data):
         alerts.append(alert_strings["NoAlerts"])
 
     return alerts
+
+def auto_feedback(data):
+    """Generates AI personal-trainer feedback via the Claude API, at most once per day."""
+
+    if not isinstance(data, dict):
+        return None
+
+    user_id = data["user_id"]
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT response, date, is_demo FROM claude_response "
+                   "JOIN users USING(user_id) WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+
+    is_demo = bool(row["is_demo"]) if row else is_demo_user(cursor, user_id)
+
+    today_str = date.today().isoformat()
+    if row and (is_demo or row["date"] == today_str):
+        db.close()
+        return row["response"]
+
+    avg_weekly_weight_change = get_avg_weekly_weight_change()
+    avg_weekly_bf_change = get_avg_weekly_bf_change()
+    avg_calories = get_avg(data["calories_history"])
+    avg_protein = get_avg(data["protein_history"])
+    avg_carbs = get_avg(data["carbs_history"])
+    avg_fats = get_avg(data["fats_history"])
+    avg_micros = get_avg(data["micros_ok_history"])
+    avg_sleep = get_avg(data["sleep_history"])
+    strength_progress = is_metric_increasing(data["exercise_history"])
+    distance_progress = is_metric_increasing(data["distance_history"])
+    intensity_progress = is_metric_increasing(data["intensity_history"])
+    goal = data["goal"]
+    goal_set_date = data["goal_set_date"]
+    height = data["height"]
+    weight = data["weight"]
+    age = data["age"]
+    gender = data["gender"]
+
+    #Gets current diet recomendations
+    diet_rec = get_diet_rec()
+    rec_calories = diet_rec["calories"]
+    rec_protein = diet_rec["protein"]
+    rec_carbs = diet_rec["carbs"]
+    rec_fats = diet_rec["fats"]
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM daily_logs WHERE user_id = ? AND date >= DATE('now', '-21 days')",
+        (user_id,)
+    )
+    log_pct = round((cursor.fetchone()[0] / 21) * 100)
+
+    cursor.execute(
+        """SELECT COUNT(DISTINCT date) FROM workout_sessions
+           WHERE user_id = ? AND date >= DATE('now', '-21 days')
+           AND session_type IN ('weights', 'both')""",
+        (user_id,)
+    )
+    lift_pct = round((cursor.fetchone()[0] / 21) * 100)
+
+    cursor.execute(
+        """SELECT COUNT(DISTINCT date) FROM workout_sessions
+           WHERE user_id = ? AND date >= DATE('now', '-21 days')
+           AND session_type IN ('cardio', 'both')""",
+        (user_id,)
+    )
+    cardio_pct = round((cursor.fetchone()[0] / 21) * 100)
+
+
+    user_text = (
+        f"Goal: {goal}. "
+        f"Weight is changing at {avg_weekly_weight_change}kg/week, body fat at {avg_weekly_bf_change}%/week. "
+        f"Daily averages — calories: {avg_calories}, protein: {avg_protein}g, carbs: {avg_carbs}g, "
+        f"fats: {avg_fats}g, sleep: {avg_sleep}h, micronutrient targets met on {round(avg_micros * 100)}% of days. "
+        f"Strength trend is {progress_label(strength_progress)}, cardio intensity is {progress_label(intensity_progress)}, "
+        f"cardio distance is {progress_label(distance_progress)}. "
+        f"Over the last 21 days: logged data on {log_pct}% of days, lifted weights on {lift_pct}% of days, "
+        f"did cardio on {cardio_pct}% of days."
+        f"User stats: date goal was chosen-{goal_set_date}, height-{height}, weight-{weight}, age-{age}, gender-{gender}"
+        f"program recommended user macro targets: calories-{rec_calories}, protein-{rec_protein}, carbs-{rec_carbs}, fats-{rec_fats}"
+    )
+
+    reply_text = call_claude_feedback(feedback_prompt, user_text)
+
+    cursor.execute(
+        """
+        INSERT INTO claude_response (user_id, response, date)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET response = excluded.response, date = excluded.date
+        """,
+        (user_id, reply_text, today_str)
+    )
+    db.commit()
+    db.close()
+
+    return reply_text

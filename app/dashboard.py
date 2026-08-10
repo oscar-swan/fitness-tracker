@@ -1,6 +1,6 @@
 #Dashboard and achievements
 from flask import Blueprint, render_template, redirect, session
-from app.alerts import collect_alert_data, manual_feedback
+from app.alerts import collect_alert_data, manual_feedback, auto_feedback
 from app.utils import get_training_plan, get_current_weight, get_current_bf, get_bmi, get_lean_body_mass, get_db, \
     get_diet_rec, get_goal, get_avg_sleep, get_avg_weekly_weight_change, get_avg_weekly_bf_change
 from config import goal_display_names
@@ -24,6 +24,7 @@ def dashboard():
     #Gets data to be displayed on dashboard
     data = collect_alert_data()
     alert = manual_feedback(data)
+    feedback = auto_feedback(data)
     diet_rec = get_diet_rec()
     rec_calories = diet_rec["calories"]
     rec_protein = diet_rec["protein"]
@@ -53,4 +54,4 @@ def dashboard():
         db.commit()
     db.close()
 
-    return render_template("dashboard.html", alert=alert, rec_calories=rec_calories, rec_protein=rec_protein, rec_carbs=rec_carbs, rec_fats=rec_fats, training_plan=training_plan, weight=weight, bf=bf, lean_mass=lean_mass, bmi=bmi, goal=goal, avg_sleep=avg_sleep, bf_change=bf_change, weight_change=weight_change)
+    return render_template("dashboard.html", alert=alert, feedback=feedback, rec_calories=rec_calories, rec_protein=rec_protein, rec_carbs=rec_carbs, rec_fats=rec_fats, training_plan=training_plan, weight=weight, bf=bf, lean_mass=lean_mass, bmi=bmi, goal=goal, avg_sleep=avg_sleep, bf_change=bf_change, weight_change=weight_change)

@@ -493,14 +493,14 @@ def parse_weights_text(raw_text):
     from config import weights_claude_prompt
     if not raw_text or not raw_text.strip():
         return []
-    return call_claude(weights_claude_prompt, raw_text)
+    return call_claude_parse(weights_claude_prompt, raw_text)
 
 
 def parse_cardio_text(raw_text):
     from config import cardio_claude_prompt
     if not raw_text or not raw_text.strip():
         return []
-    return call_claude(cardio_claude_prompt, raw_text)
+    return call_claude_parse(cardio_claude_prompt, raw_text)
 
 def valid_weight_exercise(ex):
     return (
@@ -516,7 +516,7 @@ def valid_cardio_exercise(ex):
         and ex.get("duration_min") is not None
     )
 
-def call_claude(system_prompt, user_text):
+def call_claude_parse(system_prompt, user_text):
     import json
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -534,6 +534,16 @@ def call_claude(system_prompt, user_text):
         return parsed if isinstance(parsed, list) else []
     except (json.JSONDecodeError, ValueError):
         return []
+
+def call_claude_feedback(system_prompt, user_text):
+    """Calls claude with a prompt to get feedback for user"""
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=400,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_text}],
+    )
+    return "".join(block.text for block in response.content if block.type == "text").strip()
 
 def bf_measurement_due(user_id):
     from datetime import date as date_cls
@@ -568,6 +578,14 @@ def bf_measurement_due(user_id):
         return True
 
     return False
+
+def progress_label(value):
+    return {1: "decreasing", 2: "plateauing", 3: "increasing"}.get(value, "unclear")
+
+def is_demo_user(cursor, user_id):
+    cursor.execute("SELECT is_demo FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    return bool(row and row["is_demo"])
 
 """
 if __name__ == '__main__':
