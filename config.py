@@ -115,7 +115,7 @@ goal_display_names = {
 demo_characters = {
     9001: {
         "name": "Marcus",
-        "demo_type": "Hypertrophy, on track to goal",
+        "demo_type": "Hypertrophy",
         "stats": {
             "height": 180, "weight": 82, "age": 24, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Medium", "goal": "hypertrophy"
@@ -124,7 +124,7 @@ demo_characters = {
     },
     9002: {
         "name": "Mildred",
-        "demo_type": "Hypertrophy, several issues",
+        "demo_type": "Hypertrophy",
         "stats": {
             "height": 165, "weight": 58, "age": 29, "gender": "female",
             "bf_category": "Low", "muscle_category": "Low", "goal": "hypertrophy"
@@ -133,7 +133,7 @@ demo_characters = {
     },
     9003: {
         "name": "Ken",
-        "demo_type": "Fat loss, eats too many calories",
+        "demo_type": "Fat loss",
         "stats": {
             "height": 178, "weight": 95, "age": 35, "gender": "male",
             "bf_category": "High", "muscle_category": "Medium", "goal": "fat_loss"
@@ -142,7 +142,7 @@ demo_characters = {
     },
     9004: {
         "name": "Cornelius",
-        "demo_type": "Fat loss, not doing enough cardio",
+        "demo_type": "Fat loss",
         "stats": {
             "height": 170, "weight": 78, "age": 31, "gender": "male",
             "bf_category": "High", "muscle_category": "Low", "goal": "fat_loss"
@@ -151,7 +151,7 @@ demo_characters = {
     },
     9005: {
         "name": "Sam",
-        "demo_type": "Endurance, does not eat micronutrients or work out hard enough",
+        "demo_type": "Endurance",
         "stats": {
             "height": 175, "weight": 70, "age": 27, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Medium", "goal": "endurance"
@@ -160,7 +160,7 @@ demo_characters = {
     },
     9006: {
         "name": "Grover",
-        "demo_type": "Endurance, does not log data",
+        "demo_type": "Endurance",
         "stats": {
             "height": 180, "weight": 69, "age": 22, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Low", "goal": "endurance"
@@ -213,3 +213,25 @@ feedback_prompt = (
     "Be concise, encouraging, and specific. 3 to 5 sentences. Praise what's working, "
     "Identify the most important issue if one truly exists and recommend one specific next step. Interpret the data instead of repeating the values"
 )
+
+#Metrics used to generate user graph
+graph_metrics = {
+    "diet": {
+        "calories": ("calories", "Calories (kcal)"),
+        "protein":  ("protein", "Protein (g)"),
+        "carbs":    ("carbs", "Carbs (g)"),
+        "fats":     ("fats", "Fats (g)"),
+        "sleep":    ("sleep", "Sleep (hrs)"),
+    },
+    "body": {
+        "weight":  "Weight (kg)",
+        "bodyfat": "Body Fat %",
+    },
+    "timespans": {
+        "7d":  7,
+        "1m":  30,
+        "3m":  90,
+        "1y":  365,
+        "max": None,
+    }
+}

@@ -225,21 +225,19 @@ def generate_endurance_no_logging(cur, user_id, stats, cal_adjustment, rng):
 
 
 GENERATORS = {
-    "Hypertrophy, on track to goal": generate_hypertrophy_on_track,
-    "Hypertrophy, several issues": generate_hypertrophy_stalled_undereating,
-    "Fat loss, eats too many calories": generate_fat_loss_on_track,
-    "Fat loss, not doing enough cardio": generate_fat_loss_stalled_no_cardio,
-    "Endurance, does not eat micronutrients or work out hard enough": generate_endurance,
-    "Endurance, does not log data": generate_endurance_no_logging,
+    "Hypertrophy": generate_hypertrophy_on_track,
+    "Hypertrophy": generate_hypertrophy_stalled_undereating,
+    "Fat loss": generate_fat_loss_on_track,
+    "Fat loss": generate_fat_loss_stalled_no_cardio,
+    "Endurance": generate_endurance,
+    "Endurance": generate_endurance_no_logging,
 }
 
 
 def reset_demo_character(user_id):
-    """Wipes every row belonging to this demo user_id across all tables,
-    but leaves the row for other demo users untouched. Safe to call even
-    if the user has never been seeded before."""
     conn = get_db()
     cur = conn.cursor()
+
     cur.execute(
         "DELETE FROM weight_exercises WHERE session_id IN "
         "(SELECT session_id FROM workout_sessions WHERE user_id = ?)",
@@ -254,7 +252,7 @@ def reset_demo_character(user_id):
     cur.execute("DELETE FROM daily_logs WHERE user_id = ?", (user_id,))
     cur.execute("DELETE FROM bf_calc WHERE user_id = ?", (user_id,))
     cur.execute("DELETE FROM user_stats WHERE user_id = ?", (user_id,))
-    cur.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+
     conn.commit()
     conn.close()
 
@@ -265,7 +263,13 @@ def seed_demo_character(user_id, char):
     cur = conn.cursor()
 
     cur.execute(
-        "INSERT INTO users (user_id, email, password, is_demo, created_at) VALUES (?, ?, ?, 1, ?)",
+        """INSERT INTO users (user_id, email, password, is_demo, created_at)
+           VALUES (?, ?, ?, 1, ?)
+           ON CONFLICT(user_id) DO UPDATE SET
+               email = excluded.email,
+               password = excluded.password,
+               is_demo = excluded.is_demo,
+               created_at = excluded.created_at""",
         (
             user_id,
             f"demo{user_id}@demo.local",

@@ -587,6 +587,48 @@ def is_demo_user(cursor, user_id):
     row = cursor.fetchone()
     return bool(row and row["is_demo"])
 
+
+def get_cutoff_date(timespan):
+    from datetime import datetime, timedelta
+    from config import graph_metrics
+    """Return an ISO date string to filter queries from, or a very old
+    date when the user wants the full history ('max')."""
+    timespans = graph_metrics["timespans"]
+    days = timespans.get(timespan, 30)
+    if days is None:
+        return "0000-01-01"
+    return (datetime.now().date() - timedelta(days=days)).isoformat()
+
+
+def make_line_graph(dates, series, title, ylabel):
+    import matplotlib.pyplot as plt
+    import io
+    import base64
+    """series is a dict of {label: [values]} — one or more lines on the
+    same chart, all sharing the same `dates` x-axis. Returns a base64
+    PNG string ready to drop into an <img> src."""
+    fig, ax = plt.subplots(figsize=(8, 4))
+
+    for label, values in series.items():
+        if all(v is None for v in values):
+            continue
+        ax.plot(dates, values, marker="o", label=label)
+
+    ax.set_title(title)
+    ax.set_xlabel("Date")
+    ax.set_ylabel(ylabel)
+    ax.grid(True, alpha=0.3)
+    if len(series) > 1:
+        ax.legend()
+    fig.autofmt_xdate(rotation=45)
+    fig.tight_layout()
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=100)
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode("utf-8")
+
 """
 if __name__ == '__main__':
     print(get_training_plan("hypertrophy"))

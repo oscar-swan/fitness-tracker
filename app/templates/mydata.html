@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}My Data{% endblock %}
+
+{% block content %}
+
+<div class="controls">
+    <select id="category">
+        <option value="diet">Diet</option>
+        <option value="bodymetrics">Body Metrics</option>
+        <option value="workouts">Workouts</option>
+    </select>
+
+    <select id="diet-metric">
+        <option value="calories">Calories</option>
+        <option value="protein">Protein</option>
+        <option value="carbs">Carbs</option>
+        <option value="fats">Fats</option>
+        <option value="sleep">Sleep</option>
+    </select>
+
+    <select id="body-metric" class="hidden">
+        <option value="weight">Weight</option>
+        <option value="bodyfat">Body Fat %</option>
+    </select>
+
+    <select id="workout-exercise" class="hidden">
+        <option value="">Loading exercises...</option>
+    </select>
+
+    <select id="timespan">
+        <option value="7d">7 days</option>
+        <option value="1m" selected>1 month</option>
+        <option value="3m">3 months</option>
+        <option value="1y">1 year</option>
+        <option value="max">Max</option>
+    </select>
+
+    <button id="load-btn">View graph</button>
+</div>
+
+<div id="graph-area">
+    <span id="status">Choose a category and click "View graph".</span>
+</div>
+
+<script>
+    const categorySelect = document.getElementById("category");
+    const dietMetric = document.getElementById("diet-metric");
+    const bodyMetric = document.getElementById("body-metric");
+    const workoutExercise = document.getElementById("workout-exercise");
+    const timespanSelect = document.getElementById("timespan");
+    const loadBtn = document.getElementById("load-btn");
+    const graphArea = document.getElementById("graph-area");
+
+    let exercisesLoaded = false;
+
+    function updateVisibleControls() {
+        const cat = categorySelect.value;
+
+        dietMetric.classList.toggle("hidden", cat !== "diet");
+        bodyMetric.classList.toggle("hidden", cat !== "bodymetrics");
+        workoutExercise.classList.toggle("hidden", cat !== "workouts");
+
+        if (cat === "workouts" && !exercisesLoaded) {
+            loadExerciseOptions();
+        }
+    }
+
+    function loadExerciseOptions() {
+        fetch("/mydata/exercises")
+            .then(res => res.json())
+            .then(data => {
+                workoutExercise.innerHTML = "";
+
+                if (!data.length) {
+                    workoutExercise.innerHTML =
+                        '<option value="">No workouts logged yet</option>';
+                    return;
+                }
+
+                data.forEach(ex => {
+                    const opt = document.createElement("option");
+
+                    opt.value = ex.name;
+                    opt.dataset.kind = ex.kind;
+                    opt.textContent =
+                        ex.name + (ex.kind === "cardio" ? " (cardio)" : "");
+
+                    workoutExercise.appendChild(opt);
+                });
+
+                exercisesLoaded = true;
+            })
+            .catch(() => {
+                workoutExercise.innerHTML =
+                    '<option value="">Couldn\'t load exercises</option>';
+            });
+    }
+
+    function loadGraph() {
+        const category = categorySelect.value;
+        const timespan = timespanSelect.value;
+
+        const formData = new FormData();
+
+        formData.append("category", category);
+        formData.append("timespan", timespan);
+
+        if (category === "diet") {
+            formData.append("metric", dietMetric.value);
+
+        } else if (category === "bodymetrics") {
+            formData.append("metric", bodyMetric.value);
+
+        } else if (category === "workouts") {
+            const selected =
+                workoutExercise.options[workoutExercise.selectedIndex];
+
+            if (!selected || !selected.value) {
+                graphArea.innerHTML =
+                    '<span id="status">Log a workout first to see a graph here.</span>';
+                return;
+            }
+
+            formData.append("exercise", selected.value);
+            formData.append("kind", selected.dataset.kind);
+        }
+
+        graphArea.innerHTML =
+            '<span id="status">Loading graph...</span>';
+
+        fetch("/mydata/graph", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    graphArea.innerHTML =
+                        `<span id="status">${data.error}</span>`;
+                    return;
+                }
+
+                graphArea.innerHTML =
+                    `<img src="data:image/png;base64,${data.image}" alt="graph">`;
+            })
+            .catch(() => {
+                graphArea.innerHTML =
+                    '<span id="status">Something went wrong loading the graph.</span>';
+            });
+    }
+
+    categorySelect.addEventListener("change", updateVisibleControls);
+    loadBtn.addEventListener("click", loadGraph);
+
+    updateVisibleControls();
+</script>
+
+{% endblock %}
+```
