@@ -116,7 +116,7 @@ goal_display_names = {
 demo_characters = {
     9001: {
         "name": "Marcus",
-        "demo_type": "Hypertrophy",
+        "demo_type": "hypertrophy on track",
         "stats": {
             "height": 180, "weight": 82, "age": 24, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Medium", "goal": "hypertrophy"
@@ -125,7 +125,7 @@ demo_characters = {
     },
     9002: {
         "name": "Mildred",
-        "demo_type": "Hypertrophy",
+        "demo_type": "hypertrophy stalled undereating",
         "stats": {
             "height": 165, "weight": 58, "age": 29, "gender": "female",
             "bf_category": "Low", "muscle_category": "Low", "goal": "hypertrophy"
@@ -134,7 +134,7 @@ demo_characters = {
     },
     9003: {
         "name": "Ken",
-        "demo_type": "Fat loss",
+        "demo_type": "fat loss on track",
         "stats": {
             "height": 178, "weight": 95, "age": 35, "gender": "male",
             "bf_category": "High", "muscle_category": "Medium", "goal": "fat_loss"
@@ -143,7 +143,7 @@ demo_characters = {
     },
     9004: {
         "name": "Cornelius",
-        "demo_type": "Fat loss",
+        "demo_type": "fat loss stalled no cardio",
         "stats": {
             "height": 170, "weight": 78, "age": 31, "gender": "male",
             "bf_category": "High", "muscle_category": "Low", "goal": "fat_loss"
@@ -152,7 +152,7 @@ demo_characters = {
     },
     9005: {
         "name": "Sam",
-        "demo_type": "Endurance",
+        "demo_type": "endurance no logging",
         "stats": {
             "height": 175, "weight": 70, "age": 27, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Medium", "goal": "endurance"
@@ -161,7 +161,7 @@ demo_characters = {
     },
     9006: {
         "name": "Grover",
-        "demo_type": "Endurance",
+        "demo_type": "endurance several issues",
         "stats": {
             "height": 180, "weight": 69, "age": 22, "gender": "male",
             "bf_category": "Medium", "muscle_category": "Low", "goal": "endurance"

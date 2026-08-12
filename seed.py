@@ -1,8 +1,8 @@
 import random
 import sys
 from datetime import date, timedelta
-from app.utils import get_db, get_tdee_estimate, get_rec_protein, get_rec_fats, get_rec_carbs
-from config import demo_characters, demo_history_days, weights_exercises, cardio_activities, activity_multiplier
+from app.utils import get_db, get_rec_calories, get_rec_protein, get_rec_fats, get_rec_carbs
+from config import demo_characters, demo_history_days, weights_exercises, cardio_activities
 
 
 def _log_day(cur, user_id, day, weight, calories, protein, carbs, fats, sleep, micros_ok):
@@ -58,6 +58,16 @@ def _log_cardio_session(cur, user_id, day, rng):
     )
 
 
+def _rec_calories(stats, weight, cal_adjustment):
+    """Matches get_diet_rec()'s exact call to get_rec_calories — same arg
+    order, and activity_multiplier left on its default (1.55) — so seed
+    data can never drift from what the dashboard actually calculates."""
+    return get_rec_calories(
+        stats["goal"], stats["gender"], weight, stats["height"], stats["age"],
+        stats["bf_category"], stats["muscle_category"], cal_adjustment,
+    )
+
+
 def macro_targets(calories, weight, goal):
     """Splits a day's calories into protein/carbs/fats using the same
     rec_* helpers the rest of the app uses, so demo data matches what a
@@ -69,26 +79,33 @@ def macro_targets(calories, weight, goal):
 
 
 def generate_hypertrophy_on_track(cur, user_id, stats, cal_adjustment, rng):
-    tdee = get_tdee_estimate(
-        stats["gender"], stats["weight"], stats["height"], stats["age"],
-        stats["bf_category"], stats["muscle_category"], activity_multiplier,
-    )
-    target = tdee + 300 + cal_adjustment
-    weight = stats["weight"] - 1.2
+    """On track: weight trajectory ends exactly at the user's current
+    stats["weight"] (so the last logged weight matches what's stored),
+    and the calorie target is recomputed each day from that day's own
+    simulated weight via get_rec_calories — the same function the live
+    dashboard uses — rather than a locally reimplemented TDEE guess.
+    That keeps logged calories aligned with whatever the app recalculates
+    as "recommended" from the latest weight, instead of drifting out of
+    sync with it."""
     today = date.today()
+    total_gain = rng.uniform(2.0, 4.0)
+    start_weight = stats["weight"] - total_gain
+    n_days = demo_history_days
 
     core_lifts = rng.sample(weights_exercises, k=3)
     lift_progressions = [(lift, 40, 60) for lift in core_lifts]
 
-    for i in range(demo_history_days, 0, -1):
+    for idx, i in enumerate(range(demo_history_days, 0, -1)):
         day = today - timedelta(days=i)
-        weight += rng.uniform(0.02, 0.06)
+        progress = idx / (n_days - 1) if n_days > 1 else 1
+        weight = start_weight + total_gain * progress + rng.uniform(-0.1, 0.1)
+        target = _rec_calories(stats, weight, cal_adjustment)
         calories = target + rng.randint(-100, 100)
         protein, carbs, fats = macro_targets(calories, weight, stats["goal"])
+        micros_ok = 1 if rng.random() < 0.9 else 0
         _log_day(cur, user_id, day, round(weight, 1), calories, protein, carbs, fats,
-                 round(rng.uniform(6.5, 8.5), 1), rng.choice([1, 1, 1, 0]))
+                 round(rng.uniform(6.5, 8.5), 1), micros_ok)
         if day.weekday() in (0, 2, 4):
-            progress = (demo_history_days - i) / demo_history_days
             _log_weights_session(cur, user_id, day, rng, lift_progressions, progress)
     cur.execute(
         """INSERT INTO bf_calc (user_id, body_fat_percent, date, method)
@@ -98,17 +115,8 @@ def generate_hypertrophy_on_track(cur, user_id, stats, cal_adjustment, rng):
 
 
 def generate_hypertrophy_stalled_undereating(cur, user_id, stats, cal_adjustment, rng):
-    tdee = get_tdee_estimate(
-        stats["gender"],
-        stats["weight"],
-        stats["height"],
-        stats["age"],
-        stats["bf_category"],
-        stats["muscle_category"],
-        activity_multiplier,
-    )
-    target = tdee + 300 + cal_adjustment
-    actual = tdee - 100
+    target = _rec_calories(stats, stats["weight"], cal_adjustment)
+    actual = target - 400  # eating well under what they need to gain
     weight = stats["weight"]
     today = date.today()
     for i in range(demo_history_days, 0, -1):
@@ -128,22 +136,24 @@ def generate_hypertrophy_stalled_undereating(cur, user_id, stats, cal_adjustment
 
 
 def generate_fat_loss_on_track(cur, user_id, stats, cal_adjustment, rng):
-    tdee = get_tdee_estimate(
-        stats["gender"],
-        stats["weight"],
-        stats["height"],
-        stats["age"],
-        stats["bf_category"],
-        stats["muscle_category"],
-        activity_multiplier,
-    )
-    target = tdee - 400 + cal_adjustment
-    weight = stats["weight"] + 1.5
+    """On track: weight trajectory ends exactly at the user's current
+    stats["weight"] (so the last logged weight matches what's stored),
+    and the calorie target is recomputed each day from that day's own
+    simulated weight via get_rec_calories, rather than a single static
+    TDEE from the heavier starting weight. Otherwise the app recalculates
+    a lower "recommended calories" from the final (lower) weight, and the
+    historical logs — sized for the original heavier TDEE — end up
+    looking like an excess even though the deficit was correct throughout."""
     today = date.today()
-    for i in range(demo_history_days, 0, -1):
+    total_loss = rng.uniform(4.0, 7.0)
+    start_weight = stats["weight"] + total_loss
+    n_days = demo_history_days
+    for idx, i in enumerate(range(demo_history_days, 0, -1)):
         day = today - timedelta(days=i)
-        weight -= rng.uniform(0.03, 0.08)
-        calories = target + rng.randint(-100, 100)
+        progress = idx / (n_days - 1) if n_days > 1 else 1
+        weight = start_weight - total_loss * progress + rng.uniform(-0.15, 0.15)
+        target = _rec_calories(stats, weight, cal_adjustment)
+        calories = target + rng.randint(-80, 80)
         protein, carbs, fats = macro_targets(calories, weight, stats["goal"])
         _log_day(cur, user_id, day, round(weight, 1), calories, protein, carbs, fats,
                  round(rng.uniform(6.5, 8.0), 1), rng.choice([1, 1, 1, 0]))
@@ -159,16 +169,7 @@ def generate_fat_loss_on_track(cur, user_id, stats, cal_adjustment, rng):
 
 
 def generate_fat_loss_stalled_no_cardio(cur, user_id, stats, cal_adjustment, rng):
-    tdee = get_tdee_estimate(
-        stats["gender"],
-        stats["weight"],
-        stats["height"],
-        stats["age"],
-        stats["bf_category"],
-        stats["muscle_category"],
-        activity_multiplier,
-    )
-    target = tdee - 400 + cal_adjustment
+    target = _rec_calories(stats, stats["weight"], cal_adjustment)
     weight = stats["weight"]
     today = date.today()
     for i in range(demo_history_days, 0, -1):
@@ -187,17 +188,8 @@ def generate_fat_loss_stalled_no_cardio(cur, user_id, stats, cal_adjustment, rng
     )
 
 
-def generate_endurance(cur, user_id, stats, cal_adjustment, rng):
-    tdee = get_tdee_estimate(
-        stats["gender"],
-        stats["weight"],
-        stats["height"],
-        stats["age"],
-        stats["bf_category"],
-        stats["muscle_category"],
-        activity_multiplier,
-    )
-    target = tdee + cal_adjustment
+def generate_endurance_on_track(cur, user_id, stats, cal_adjustment, rng):
+    target = _rec_calories(stats, stats["weight"], cal_adjustment)
     weight = stats["weight"]
     today = date.today()
     for i in range(demo_history_days, 0, -1):
@@ -216,6 +208,32 @@ def generate_endurance(cur, user_id, stats, cal_adjustment, rng):
     )
 
 
+def generate_endurance_several_issues(cur, user_id, stats, cal_adjustment, rng):
+    """Multiple problems stacked at once (undereating, short sleep, poor
+    micros, inconsistent cardio attendance) while still logging daily_logs
+    every day, so the AI coach has enough data to give feedback."""
+    correct_target = _rec_calories(stats, stats["weight"], cal_adjustment)
+    target = correct_target - 350  # undereating relative to the real target, not a guessed tdee
+    weight = stats["weight"]
+    today = date.today()
+    for i in range(demo_history_days, 0, -1):
+        day = today - timedelta(days=i)
+        weight -= rng.uniform(0.0, 0.05)
+        calories = target + rng.randint(-100, 100)
+        protein, carbs, fats = macro_targets(calories, weight, stats["goal"])
+        _log_day(cur, user_id, day, round(weight, 1), calories, protein, carbs, fats,
+                 round(rng.uniform(5.0, 6.5), 1), rng.choice([0, 0, 1]))
+        # Should train cardio 4x/week (Mon/Wed/Fri/Sat) but only shows up
+        # to roughly half of those sessions.
+        if day.weekday() in (1, 3, 5, 6) and rng.random() < 0.5:
+            _log_cardio_session(cur, user_id, day, rng)
+    cur.execute(
+        """INSERT INTO bf_calc (user_id, body_fat_percent, date, method)
+           VALUES (?, ?, ?, 'calculated')""",
+        (user_id, 21.0, (today - timedelta(days=2)).isoformat()),
+    )
+
+
 def generate_endurance_no_logging(cur, user_id, stats, cal_adjustment, rng):
     today = date.today()
     stray_days = rng.sample(range(3, demo_history_days), k=2)
@@ -224,13 +242,18 @@ def generate_endurance_no_logging(cur, user_id, stats, cal_adjustment, rng):
         _log_cardio_session(cur, user_id, day, rng)
 
 
+# NOTE: each demo_type below must be a unique key, or later entries will
+# silently overwrite earlier ones with the same key and their generator
+# functions will never run. Keep these in sync with demo_type values in
+# config.py's demo_characters.
 GENERATORS = {
-    "Hypertrophy": generate_hypertrophy_on_track,
-    "Hypertrophy": generate_hypertrophy_stalled_undereating,
-    "Fat loss": generate_fat_loss_on_track,
-    "Fat loss": generate_fat_loss_stalled_no_cardio,
-    "Endurance": generate_endurance,
-    "Endurance": generate_endurance_no_logging,
+    "hypertrophy on track": generate_hypertrophy_on_track,
+    "hypertrophy stalled undereating": generate_hypertrophy_stalled_undereating,
+    "fat loss on track": generate_fat_loss_on_track,
+    "fat loss stalled no cardio": generate_fat_loss_stalled_no_cardio,
+    "endurance on track": generate_endurance_on_track,
+    "endurance several issues": generate_endurance_several_issues,
+    "endurance no logging": generate_endurance_no_logging,
 }
 
 
