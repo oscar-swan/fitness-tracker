@@ -538,7 +538,7 @@ def call_claude_parse(system_prompt, user_text):
 def call_claude_feedback(system_prompt, user_text):
     """Calls claude with a prompt to get feedback for user"""
     response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
+        model="claude-sonnet-5",
         max_tokens=400,
         system=system_prompt,
         messages=[{"role": "user", "content": user_text}],
