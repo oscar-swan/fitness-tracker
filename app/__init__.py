@@ -15,8 +15,8 @@ def create_app():
 
     from app.auth import auth_bp
     from app.dashboard import dashboard_bp
-    from app.profile import forms_bp
-    from app.logs import mydata_bp
+    from app.data_input import forms_bp
+    from app.graph_data import mydata_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(forms_bp)
