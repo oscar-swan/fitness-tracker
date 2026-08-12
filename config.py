@@ -63,7 +63,8 @@ alert_strings = {
     "StrengthNoMaintainIssue": "You are not maintaining strength well",
     "DistanceIssue": "You are decreasing the distance you cover",
     "IntensityIssue": "You need to increase workout intensity",
-    "NoAlerts": "You are on track to reach your goal"
+    "NoAlerts": "You are on track to reach your goal",
+    "NewGoal": "Alerts will appear once you have completed enough days on your new goal"
 }
 
 #Sorts the different goals on type of exercise required

@@ -52,6 +52,14 @@ def dashboard():
             (weight, session["user_id"])
         )
         db.commit()
+    if weight is None:
+        result = cursor.execute(
+            "SELECT weight FROM user_stats WHERE user_id = ?",
+            (session["user_id"],)
+        ).fetchone()
+        if result is not None:
+            weight = result["weight"]
+
     db.close()
 
     return render_template("dashboard.html", alert=alert, feedback=feedback, rec_calories=rec_calories, rec_protein=rec_protein, rec_carbs=rec_carbs, rec_fats=rec_fats, training_plan=training_plan, weight=weight, bf=bf, lean_mass=lean_mass, bmi=bmi, goal=goal, avg_sleep=avg_sleep, bf_change=bf_change, weight_change=weight_change)

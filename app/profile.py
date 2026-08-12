@@ -1,7 +1,7 @@
 # Personal details and forms
 from flask import Blueprint, render_template, request, redirect, session
 from app.utils import get_db, parse_weights_text, parse_cardio_text, valid_weight_exercise, valid_cardio_exercise, get_body_fat_percentage, bf_measurement_due
-from datetime import date as date_cls
+from datetime import date, date as date_cls
 from config import valid_workout_types
 
 forms_bp = Blueprint("user_info", __name__)
@@ -40,16 +40,26 @@ def userinfo():
 
         # Updates data if there is existing data and creates new entry if there is not
         if existing_data:
-            cursor.execute("""
-                UPDATE user_stats
-                SET height = ?, weight = ?, age = ?, gender = ?, bf_category = ?, muscle_category = ?, goal = ?
-                WHERE user_id = ?
-            """, (height, weight, age, gender, bfa, mma, goal, session["user_id"]))
+            if existing_data["goal"] != goal:
+                # Goal has changed — reset goal_set_date so the NewGoal alert window restarts
+                cursor.execute("""
+                    UPDATE user_stats
+                    SET height = ?, weight = ?, age = ?, gender = ?, bf_category = ?, muscle_category = ?, goal = ?, goal_set_date = ?
+                    WHERE user_id = ?
+                """, (height, weight, age, gender, bfa, mma, goal, date.today().isoformat(), session["user_id"]))
+            else:
+                # Goal is unchanged — leave goal_set_date alone
+                cursor.execute("""
+                    UPDATE user_stats
+                    SET height = ?, weight = ?, age = ?, gender = ?, bf_category = ?, muscle_category = ?, goal = ?
+                    WHERE user_id = ?
+                """, (height, weight, age, gender, bfa, mma, goal, session["user_id"]))
         else:
             cursor.execute("""
-                INSERT INTO user_stats (user_id, height, weight, age, gender, bf_category, muscle_category, goal)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (session["user_id"], height, weight, age, gender, bfa, mma, goal))
+                INSERT INTO user_stats (user_id, height, weight, age, gender, bf_category, muscle_category, goal, goal_set_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (session["user_id"], height, weight, age, gender, bfa, mma, goal, date.today().isoformat()))
+
         db.commit()
         db.close()
 
@@ -73,8 +83,7 @@ def userinfo():
     else:
         height = weight = age = gender = bfa = mma = goal = ""
 
-    return render_template("userinfo.html", height=height, weight=weight, age=age,
-                            gender=gender, bfa=bfa, mma=mma, goal=goal)
+    return render_template("userinfo.html", height=height, weight=weight, age=age, gender=gender, bfa=bfa, mma=mma, goal=goal)
 
 
 @forms_bp.route("/dailyinfo", methods=["GET", "POST"])

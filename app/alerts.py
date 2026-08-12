@@ -36,6 +36,16 @@ def collect_alert_data():
     goal_set_date = row["goal_set_date"] if row else None
     goal = row["goal"] if row else None
 
+    if goal_set_date:
+        cursor.execute(
+            "SELECT julianday('now') - julianday(?) AS days_since_goal",
+            (goal_set_date,)
+        )
+        days_since_goal = cursor.fetchone()["days_since_goal"]
+
+        if days_since_goal is not None and days_since_goal < 7:
+            return "NewGoal"
+
     #Gets the amount of daily logs the user has completed in the last 10 days
     cursor.execute(
         """
@@ -288,6 +298,9 @@ def manual_feedback(data):
         return alerts
     if data == "NEC":
         alerts.append(alert_strings["NEC"])
+        return alerts
+    if data == "NewGoal":
+        alerts.append(alert_strings["NewGoal"])
         return alerts
 
     #Process data for evaluation
