@@ -2,10 +2,6 @@
 
 {% block title %}User Info{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-{% endblock %}
-
 {% block content %}
 <h1>Personal Data</h1>
 <form action="/userinfo" method="post">

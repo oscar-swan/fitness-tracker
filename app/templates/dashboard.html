@@ -2,153 +2,167 @@
 
 {% block title %}Dashboard{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
-{% endblock %}
-
 {% block content %}
 <div class="dashboard-container">
 
     <h1 class="dashboard-header">Dashboard</h1>
 
-    <!-- Alert -->
-    <div class="alert-section">
-    <div class="alert-box">
-        <h2>Alerts</h2>
+    <div class="dashboard-grid">
 
-        {% if alert %}
-            {% for a in alert %}
-                <p>{{ a }}</p>
-            {% endfor %}
-        {% else %}
-            <p>You're progressing correctly. No issues found.</p>
-        {% endif %}
-    </div>
-    </div>
+        <div class="dashboard-main">
 
-    <!-- AI Feedback -->
-    {% if feedback %}
-    <div class="section">
-        <h2>AI Coach's Feedback</h2>
+            <!-- Alert -->
+            <div class="section alert-section">
+            <div class="alert-box">
+                <h2>Alerts</h2>
 
-        <div class="feedback-box">
-            <p>{{ feedback }}</p>
-        </div>
-    </div>
-    {% endif %}
+                {% set positive_alerts = [
+                    "Alerts will appear here if you have any issues",
+                    "You are on track to reach your goal",
+                    "Alerts will appear once you have completed enough days on your new goal"
+                ] %}
 
-    <!-- Current Stats -->
-    <div class="section">
-        <h2>Current Stats</h2>
-
-        <div class="stats-grid">
-
-            <div class="stat-box">
-                <h3>Weight</h3>
-                <p>{{ weight }} kg</p>
-            </div>
-
-            <div class="stat-box">
-                <h3>Body Fat</h3>
-                {% if bf is not none %}
-                    <p>{{ bf }}%</p>
+                {% if alert %}
+                    {% for a in alert %}
+                        <p class="alert-item {% if a in positive_alerts %}alert-ok{% else %}alert-bad{% endif %}">{{ a }}</p>
+                    {% endfor %}
                 {% else %}
-                    <p>Not available</p>
+                    <p class="alert-item alert-ok">You're progressing correctly. No issues found.</p>
                 {% endif %}
             </div>
-
-            <div class="stat-box">
-                <h3>Lean Mass</h3>
-                {% if lean_mass is not none %}
-                    <p>{{ lean_mass }} kg</p>
-                {% else %}
-                    <p>Not available</p>
-                {% endif %}
             </div>
 
-            <div class="stat-box">
-                <h3>BMI</h3>
-                {% if bmi is not none %}
-                    <p>{{ bmi }}</p>
-                {% else %}
-                    <p>Not available</p>
-                {% endif %}
+            <!-- Current Stats -->
+            <div class="section stats-section">
+                <h2>Current Stats</h2>
+
+                <div class="stats-grid">
+
+                    <div class="stat-box">
+                        <h3>Weight</h3>
+                        <p>{{ weight }} kg</p>
+                    </div>
+
+                    <div class="stat-box">
+                        <h3>Body Fat</h3>
+                        {% if bf is not none %}
+                            <p>{{ bf }}%</p>
+                        {% else %}
+                            <p>Not available</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="stat-box">
+                        <h3>Lean Mass</h3>
+                        {% if lean_mass is not none %}
+                            <p>{{ lean_mass }} kg</p>
+                        {% else %}
+                            <p>Not available</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="stat-box">
+                        <h3>BMI</h3>
+                        {% if bmi is not none %}
+                            <p>{{ bmi }}</p>
+                        {% else %}
+                            <p>Not available</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Nutrition -->
+            <div class="section nutrition-section">
+
+                <h2>Nutrition Targets</h2>
+
+                <div class="stats-grid">
+
+                    <div class="stat-box">
+                        <h3>Calories</h3>
+                        <p>{{ rec_calories }}</p>
+                    </div>
+
+                    <div class="stat-box">
+                        <h3>Protein</h3>
+                        <p>{{ rec_protein }} g</p>
+                    </div>
+
+                    <div class="stat-box">
+                        <h3>Carbs</h3>
+                        <p>{{ rec_carbs }} g</p>
+                    </div>
+
+                    <div class="stat-box">
+                        <h3>Fats</h3>
+                        <p>{{ rec_fats }} g</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Training -->
+            <div class="section training-section">
+
+                <h2>Training Plan</h2>
+
+                <div class="training-box">
+                    <p>{{ training_plan }}</p>
+                </div>
+
             </div>
 
         </div>
-    </div>
 
-    <!-- Goal -->
-    <div class="section">
-        <h2>Current Goal</h2>
+        <div class="dashboard-side">
 
-        <div class="goal-box">
-            <h3>{{ goal }}</h3>
-        </div>
-    </div>
+            <!-- AI Feedback -->
+            {% if feedback %}
+            <div class="section feedback-section">
+                <h2>AI Coach's Feedback</h2>
 
-    <!-- Nutrition -->
-    <div class="section">
+                <div class="feedback-box">
+                    <p>{{ feedback }}</p>
+                </div>
+            </div>
+            {% endif %}
 
-        <h2>Nutrition Targets</h2>
+            <!-- Goal -->
+            <div class="section goal-section">
+                <h2>Current Goal</h2>
 
-        <div class="stats-grid">
-
-            <div class="stat-box">
-                <h3>Calories</h3>
-                <p>{{ rec_calories }}</p>
+                <div class="goal-box">
+                    <h3>{{ goal }}</h3>
+                </div>
             </div>
 
-            <div class="stat-box">
-                <h3>Protein</h3>
-                <p>{{ rec_protein }} g</p>
-            </div>
+            <!-- Weekly Progress -->
+            <div class="section progress-section">
 
-            <div class="stat-box">
-                <h3>Carbs</h3>
-                <p>{{ rec_carbs }} g</p>
-            </div>
+                <h2>Weekly Progress</h2>
 
-            <div class="stat-box">
-                <h3>Fats</h3>
-                <p>{{ rec_fats }} g</p>
-            </div>
+                <div class="stats-grid stats-grid-narrow">
 
-        </div>
+                    <div class="stat-box">
+                        <h3>Weight Change</h3>
+                        <p>{{ weight_change }} kg/week</p>
+                    </div>
 
-    </div>
+                    <div class="stat-box">
+                        <h3>Body Fat Change</h3>
+                        <p>{{ bf_change }} %/week</p>
+                    </div>
 
-    <!-- Training -->
-    <div class="section">
+                    <div class="stat-box">
+                        <h3>Average Sleep</h3>
+                        <p>{{ avg_sleep }} hrs</p>
+                    </div>
 
-        <h2>Training Plan</h2>
+                </div>
 
-        <div class="training-box">
-            <p>{{ training_plan }}</p>
-        </div>
-
-    </div>
-
-    <!-- Weekly Progress -->
-    <div class="section">
-
-        <h2>Weekly Progress</h2>
-
-        <div class="stats-grid">
-
-            <div class="stat-box">
-                <h3>Weight Change</h3>
-                <p>{{ weight_change }} kg/week</p>
-            </div>
-
-            <div class="stat-box">
-                <h3>Body Fat Change</h3>
-                <p>{{ bf_change }} %/week</p>
-            </div>
-
-            <div class="stat-box">
-                <h3>Average Sleep</h3>
-                <p>{{ avg_sleep }} hrs</p>
             </div>
 
         </div>
@@ -156,7 +170,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="section">
+    <div class="section actions-section">
 
         <h2>Quick Actions</h2>
 

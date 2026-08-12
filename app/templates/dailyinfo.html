@@ -2,10 +2,6 @@
 
 {% block title %}Daily Log{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-{% endblock %}
-
 {% block content %}
 <h1>Daily Log</h1>
 <form action="/dailyinfo" method="post">
