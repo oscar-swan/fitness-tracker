@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, session, url_for, abort
+from flask import Blueprint, render_template, request, redirect, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.utils import get_db
 from config import demo_characters
@@ -70,6 +70,8 @@ def login():
 def demoselect():
     if request.method == "POST":
         user_id = int(request.form["user_id"])
+        if user_id not in demo_characters:
+            abort(400)
         reset_and_seed_character(user_id)
         session["user_id"] = user_id
         session["is_demo"] = True

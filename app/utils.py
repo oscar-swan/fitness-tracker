@@ -2,9 +2,11 @@ import sqlite3
 import os
 import math
 from datetime import datetime
+from dotenv import load_dotenv
 from config import tdee_adjustments, protein_multipliers, plans, cal_goal_adjustments, fat_pct_of_calories, increasing_score_thresholds, macro_tolerance
 from anthropic import Anthropic
 
+load_dotenv()
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "fitness_tracker.db")
@@ -12,7 +14,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "fitness_tracker.db")
 def get_db():
     """Opens the database connection"""
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # rows can be called like dictionaries (row["email"] not row[0])
+    conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 

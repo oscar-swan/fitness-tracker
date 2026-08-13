@@ -1,12 +1,12 @@
 # Personal details and forms
-from flask import Blueprint, render_template, request, redirect, session
+from flask import Blueprint, render_template, request, redirect, session, abort
 from app.utils import get_db, parse_weights_text, parse_cardio_text, valid_weight_exercise, valid_cardio_exercise, get_body_fat_percentage, bf_measurement_due
 from datetime import date, date as date_cls
-from config import valid_workout_types
+from config import valid_workout_types, plans
 
 forms_bp = Blueprint("user_info", __name__)
 
-VALID_GOALS = {"hypertrophy", "cut", "fat_loss", "recomp", "strength_gain", "endurance"}
+VALID_GOALS = set(plans.keys())
 VALID_GENDERS = {"male", "female"}
 
 
@@ -194,6 +194,10 @@ def dailyinfo():
             if gender == "female" and hip is None:
                 db.close()
                 return "Hip measurement required", 400
+            if waist <= neck:
+                abort(400, "Waist measurement must be greater than neck measurement.")
+            if gender == "female" and (waist + hip) <= neck:
+                abort(400, "Invalid measurements for body fat calculation.")
 
             bf_percent = get_body_fat_percentage(gender, height, waist, neck, hip)
 

@@ -47,11 +47,6 @@ def mydata_exercises():
                 [{"name": r["name"], "kind": r["kind"]} for r in cardio]
     return jsonify(exercises)
 
-
-# ----------------------------------------------------------------------
-# Single endpoint that builds whichever graph the dropdowns asked for.
-# category = diet | bodymetrics | workouts
-# ----------------------------------------------------------------------
 @mydata_bp.route("/mydata/graph", methods=["POST"])
 def mydata_graph():
     if "user_id" not in session:
@@ -68,7 +63,6 @@ def mydata_graph():
     diet_metrics = graph_metrics["diet"]
     body_metrics = graph_metrics["body"]
 
-    # ---------------- DIET ----------------
     if category == "diet":
         metric = request.form.get("metric")
         if metric not in diet_metrics:
@@ -93,7 +87,6 @@ def mydata_graph():
         image = make_line_graph(dates, {ylabel: values}, f"{ylabel} Over Time", ylabel)
         return jsonify({"image": image})
 
-    # ---------------- BODY METRICS ----------------
     elif category == "bodymetrics":
         metric = request.form.get("metric")
         if metric not in body_metrics:
@@ -128,7 +121,6 @@ def mydata_graph():
         image = make_line_graph(dates, {ylabel: values}, f"{ylabel} Over Time", ylabel)
         return jsonify({"image": image})
 
-    # ---------------- WORKOUTS ----------------
     elif category == "workouts":
         exercise = request.form.get("exercise")
         kind = request.form.get("kind")

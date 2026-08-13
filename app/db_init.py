@@ -71,7 +71,8 @@ def init_db():
             sleep     REAL,
             micros_ok INTEGER,   -- 0 / 1 / NULL
             notes     TEXT,      -- freeform, optional
-            FOREIGN KEY (user_id) REFERENCES users(user_id)
+            FOREIGN KEY (user_id) REFERENCES users(user_id),
+            UNIQUE(user_id, date)
         )
     """)
 
