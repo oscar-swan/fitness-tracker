@@ -1,7 +1,22 @@
 # Fitness Tracker
 AI powered fitness tracking web app built with Flask and SQLite. Logs workouts, nutrition and body metrics, with Claude AI providing personalised feedback and natural language workout entry.
 
-Add link here when website goes live after security checks
+**Live demo:** add link here
+
+## Contents
+- [Background](#background)
+- [What this project does](#what-this-project-does)
+- [Screenshots](#screenshots)
+- [AI Features](#ai-features)
+- [How to Run](#how-to-run)
+- [Technologies Used](#technologies-used)
+- [Design Decisions](#design-decisions)
+- [Testing](#testing)
+- [Security](#security)
+- [Program in Practice](#program-in-practice)
+- [Evaluation](#evaluation)
+- [Potential Improvements](#potential-improvements)
+- [AI Use in Development](#ai-use-in-development)
 
 # Background
 The project started as my A-Level Computer Science coursework. I have decided to revisit the idea and rewrite the original code, add new features and integrate AI features that are well suited to the concept. The core ideas and structures already exist speeding up the development process.
@@ -60,7 +75,7 @@ This project is a web based application that tracks the users fitness. The progr
 
 # Design Decisions
 
-A lot of these decisions carry over from my A-level project, but the original implementations had bugs or didn't hold up once I started thinking about edge cases (users switching goals mid-way, sparse data, etc.), so most of this was rebuilt or rethought rather than copied over.
+A lot of these decisions carry over from my A-level project, but the original implementations had bugs or didn't hold up once I started thinking about edge cases (users switching goals midway, sparse data, etc.), so most of this was rebuilt or rethought rather than copied over.
 
 ## Database Structure
 
@@ -130,13 +145,39 @@ If someone is hitting their calorie target but not seeing the expected effect on
 - Epley's 1RM formula
 - Formulas for predicting recommended macros based on the user's info
 
+### Testing
+No formal unittests yet, but I manually tested the core algorithms using `if __name__ == "__main__"` blocks in `utils.py` before integrating them.
+
+# Security
+Found and fixed a bug during a code review where the `/demoselect` route trusted a `user_id` sent from the form with no check it was actually a demo account. Anyone could send a real user's id and it would wipe their data before failing. Fixed by validating the id is a real demo account first.
+
 # Program in Practice
-To be completed
+I tested the program myself acting as a user to assess how effective it is as a tool for tracking fitness progress.
+
+### Macronutrient Logging
+One thing that stood out to me was when completing a daily log, if you did not count your macronutrients perfectly you would have to guess for the form. There were days where I knew I had eaten roughly the correct amount, but did not know exactly, so I just went back to check the recommended values and entered them instead. It's hard to count your exact macronutrient values daily when diet varies. A solution to this would be adding a checkbox that allows the user to auto enter the values to satisfy their daily targets into the database, although I feel this could discourage legitimate user tracking, with users 'cheating' and checking the box without checking themselves.
+
+### Body Fat Percentage Accuracy
+I noticed my calculated body fat percentage was higher than it actually is. This is typical with the Navy body fat formula, as different people store fat differently and a one size fits all formula has some discrepancies that make it unreliable. While the value may be incorrect, tracking this value to see if it is increasing or decreasing will still be just as useful, so it is only the value itself that may appear wrong.
+Without the user going to get a DEXA scan it is very hard to work out body fat percentage within a program using user data. Some adjustments could be made, such as asking the user about vascularity or abdominal visibility to attempt to refine the calculated value, although this remains difficult. Perhaps AI could be used again, using a photo of the user along with the Navy formula to refine the calculation, but users may not feel comfortable uploading photos of themselves to the program which would make this difficult (see Potential Improvements).
+
+### Lack of Visible Goals
+When looking at the dashboard I noticed I did not have anything to motivate me, such as a target or goal on screen rather than just in my head. Maybe the user could select a target weight, body fat percentage or a strength target on a particular exercise, and a progress bar could be shown on how close you are to achieving that goal, along with stats on the progress made so far, such as weight loss so far etc. The program could also look at progress speed and predict when the user will reach their goal.
+
+### Tracking Progress Over Bulk and Cut Cycles
+When viewing data, body metrics such as weight and body fat percentage are likely to change over time, going up and down over several typical bulk and cut cycles, which makes actual progress hard to view over long periods of time. Storing lean mass in the database could negate this issue, as lean mass is likely to trend upwards and hold a lot more consistently over time compared to weight.
+
+### First Time AI Feedback
+Upon logging in and submitting my first daily log I had no AI feedback. This is correct program design, as the program does not have enough data to analyse the user fully yet, although a new user might not know this, so a message indicating when they will receive their first AI feedback may be appropriate. Some issues, such as not working out or not logging days consistently enough, actually also prevent AI feedback for similar reasons to a new account, which may confuse users too if they wait the specified amount of time and then still do not receive any feedback.
 
 # Evaluation
-To be completed
+Overall, I believe the fitness tracker is an effective tool for assisting fitness tracking and can be used by a wide range of people of varying ages, gender and goals.
+Many of the algorithms used are science based formulas and ideas, the alerts signal exact issues to a user that may not know what they are doing wrong, and the AI feedback allows for a complete analysis of user progress to ensure they are on track.
+I believe beginner and intermediate users would benefit the most out of using this app, as experts could refine their decisions more effectively by understanding their own body better through years of experience, although many of the features the app provides could still be useful.
+I have highlighted a few difficulties and potential improvements that could be made that would make the app more effective, but I believe the app is an effective tool in its current state and a complete product.
 
 # Potential Improvements
+- User enters a  target value that is weight, strength or body fat percentage based and progress toward the selected goal is shown
 - AI could predict users strength / weight / muscle mass progress into the future
 - Achievements or ranking system
 - Ability to converse with the AI assistant
@@ -145,9 +186,14 @@ To be completed
 - Mobility goal for users attempting to regain or maintain their body mobility
 - Limits in place on weight loss goals and minimum recommended calories to discourage unhealthy habits and prevent encouraging eating disorders
 - Change calorie adjustment to a percentage based value so that it scales better
+- Add CSRF protection on state changing forms
 
 # AI Use in development
 * The database initialiser code in db_init.py was generated by AI from an updated ERD diagram based on my original A-level project database structure, reflecting my new design decisions
 * AI was used to generate code within seed.py and then edited manually to integrate into the program
 * CSS within the program was generated by AI to match specific design choices, then manually tweaked to refine.
 * AI was used throughout development to assist with debugging.
+
+---
+
+My Github link: [github.com/oscar-swan](https://github.com/oscar-swan)
