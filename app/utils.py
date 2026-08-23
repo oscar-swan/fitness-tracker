@@ -631,6 +631,17 @@ def make_line_graph(dates, series, title, ylabel):
     buf.seek(0)
     return base64.b64encode(buf.read()).decode("utf-8")
 
+def login_required(f):
+    from functools import wraps
+    from flask import session, redirect
+    """Redirects to /login if there's no active session."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated_function
+
 """
 if __name__ == '__main__':
     print(get_training_plan("hypertrophy"))

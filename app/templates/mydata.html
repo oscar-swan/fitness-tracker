@@ -98,57 +98,60 @@
     }
 
     function loadGraph() {
-        const category = categorySelect.value;
-        const timespan = timespanSelect.value;
+    const category = categorySelect.value;
+    const timespan = timespanSelect.value;
 
-        const formData = new FormData();
+    const formData = new FormData();
 
-        formData.append("category", category);
-        formData.append("timespan", timespan);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    formData.append("csrf_token", csrfToken);
 
-        if (category === "diet") {
-            formData.append("metric", dietMetric.value);
+    formData.append("category", category);
+    formData.append("timespan", timespan);
 
-        } else if (category === "bodymetrics") {
-            formData.append("metric", bodyMetric.value);
+    if (category === "diet") {
+        formData.append("metric", dietMetric.value);
 
-        } else if (category === "workouts") {
-            const selected =
-                workoutExercise.options[workoutExercise.selectedIndex];
+    } else if (category === "bodymetrics") {
+        formData.append("metric", bodyMetric.value);
 
-            if (!selected || !selected.value) {
+    } else if (category === "workouts") {
+        const selected =
+            workoutExercise.options[workoutExercise.selectedIndex];
+
+        if (!selected || !selected.value) {
+            graphArea.innerHTML =
+                '<span id="status">Log a workout first to see a graph here.</span>';
+            return;
+        }
+
+        formData.append("exercise", selected.value);
+        formData.append("kind", selected.dataset.kind);
+    }
+
+    graphArea.innerHTML =
+        '<span id="status">Loading graph...</span>';
+
+    fetch("/mydata/graph", {
+        method: "POST",
+        body: formData
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
                 graphArea.innerHTML =
-                    '<span id="status">Log a workout first to see a graph here.</span>';
+                    `<span id="status">${data.error}</span>`;
                 return;
             }
 
-            formData.append("exercise", selected.value);
-            formData.append("kind", selected.dataset.kind);
-        }
-
-        graphArea.innerHTML =
-            '<span id="status">Loading graph...</span>';
-
-        fetch("/mydata/graph", {
-            method: "POST",
-            body: formData
+            graphArea.innerHTML =
+                `<img src="data:image/png;base64,${data.image}" alt="graph">`;
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    graphArea.innerHTML =
-                        `<span id="status">${data.error}</span>`;
-                    return;
-                }
-
-                graphArea.innerHTML =
-                    `<img src="data:image/png;base64,${data.image}" alt="graph">`;
-            })
-            .catch(() => {
-                graphArea.innerHTML =
-                    '<span id="status">Something went wrong loading the graph.</span>';
-            });
-    }
+        .catch(() => {
+            graphArea.innerHTML =
+                '<span id="status">Something went wrong loading the graph.</span>';
+        });
+}
 
     categorySelect.addEventListener("change", updateVisibleControls);
     loadBtn.addEventListener("click", loadGraph);

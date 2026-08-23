@@ -6,21 +6,19 @@ import matplotlib
 matplotlib.use("Agg")  # server-side rendering, no display needed
 import matplotlib.pyplot as plt
 from flask import Blueprint, render_template, request, jsonify, session, redirect
-from app.utils import get_db, get_cutoff_date, make_line_graph
+from app.utils import get_db, get_cutoff_date, make_line_graph, login_required
 from config import graph_metrics
 
 mydata_bp = Blueprint("mydata_bp", __name__)
 
 @mydata_bp.route("/mydata")
+@login_required
 def mydata():
-    if "user_id" not in session:
-        return redirect("/login")
     return render_template("mydata.html")
 
 @mydata_bp.route("/mydata/exercises")
+@login_required
 def mydata_exercises():
-    if "user_id" not in session:
-        return redirect("/login")
 
     user_id = session["user_id"]
     conn = get_db()
@@ -48,9 +46,8 @@ def mydata_exercises():
     return jsonify(exercises)
 
 @mydata_bp.route("/mydata/graph", methods=["POST"])
+@login_required
 def mydata_graph():
-    if "user_id" not in session:
-        return redirect("/login")
 
     user_id = session["user_id"]
     category = request.form.get("category")

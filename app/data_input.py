@@ -1,6 +1,6 @@
 # Personal details and forms
 from flask import Blueprint, render_template, request, redirect, session, abort
-from app.utils import get_db, parse_weights_text, parse_cardio_text, valid_weight_exercise, valid_cardio_exercise, get_body_fat_percentage, bf_measurement_due
+from app.utils import get_db, parse_weights_text, parse_cardio_text, valid_weight_exercise, valid_cardio_exercise, get_body_fat_percentage, bf_measurement_due, login_required
 from datetime import date, date as date_cls
 from config import valid_workout_types, plans
 
@@ -11,6 +11,7 @@ VALID_GENDERS = {"male", "female"}
 
 
 @forms_bp.route("/userinfo", methods=["GET", "POST"])
+@login_required
 def userinfo():
     # Checks if user needs to be redirected
     if "user_id" not in session:
@@ -87,9 +88,8 @@ def userinfo():
 
 
 @forms_bp.route("/dailyinfo", methods=["GET", "POST"])
+@login_required
 def dailyinfo():
-    if "user_id" not in session:
-        return redirect("/login")
 
     if request.method == "POST":
         log_date = request.form.get("date") or date_cls.today().isoformat()

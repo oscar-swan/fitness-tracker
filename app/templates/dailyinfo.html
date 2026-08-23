@@ -5,6 +5,7 @@
 {% block content %}
 <h1>Daily Log</h1>
 <form action="/dailyinfo" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <label for="date">Date:</label>
     <input type="date" id="date" name="date" value="{{ date }}" required><br><br>

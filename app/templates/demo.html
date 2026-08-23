@@ -8,6 +8,7 @@
   <div class="demo-grid">
     {% for user_id, char in demo_characters.items() %}
     <form method="POST" class="demo-card-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="user_id" value="{{ user_id }}">
 
       <button type="submit" class="demo-card">

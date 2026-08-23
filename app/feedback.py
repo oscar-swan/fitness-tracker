@@ -282,7 +282,6 @@ def collect_alert_data():
 
 def manual_feedback(data):
     """Processes and analyses user data"""
-    #Alert to refuse feedback if issue with user's consistency with data logging or working out
     alerts = []
     if data == "NewAccount":
         alerts.append(alert_strings["NewAccount"])
@@ -333,13 +332,14 @@ def manual_feedback(data):
 
     #Checks for any major issues that make analysis difficult
     serious_flag = 0
-    if avg_calories < diet_boundaries["calories"]["lower"]:
-        alerts.append(alert_strings["TooLittleCals"])
-        serious_flag = 1
-    if avg_calories > diet_boundaries["calories"]["upper"]:
-        alerts.append(alert_strings["TooManyCals"])
-        serious_flag = 1
-    if avg_protein < diet_boundaries["protein"]["lower"]:
+    if avg_calories is not None:
+        if avg_calories < diet_boundaries["calories"]["lower"]:
+            alerts.append(alert_strings["TooLittleCals"])
+            serious_flag = 1
+        if avg_calories > diet_boundaries["calories"]["upper"]:
+            alerts.append(alert_strings["TooManyCals"])
+            serious_flag = 1
+    if avg_protein is not None and avg_protein < diet_boundaries["protein"]["lower"]:
         alerts.append(alert_strings["TooLittleProtein"])
         serious_flag = 1
 
@@ -388,20 +388,21 @@ def manual_feedback(data):
                         data["cal_adjustment_date"] = today_str
 
     #Analyses user data to spot issues
-
-    if avg_protein > diet_boundaries["protein"]["upper"]:
+    if avg_protein is not None and avg_protein > diet_boundaries["protein"]["upper"]:
         alerts.append(alert_strings["TooMuchProtein"])
-    if avg_carbs < diet_boundaries["carbs"]["lower"]:
-        alerts.append(alert_strings["TooLittleCarbs"])
-    if avg_carbs > diet_boundaries["carbs"]["upper"]:
-        alerts.append(alert_strings["TooManyCarbs"])
-    if avg_fats < diet_boundaries["fats"]["lower"]:
-        alerts.append(alert_strings["TooLittleFats"])
-    if avg_fats > diet_boundaries["fats"]["upper"]:
-        alerts.append(alert_strings["TooManyFats"])
-    if avg_micros < 0.5:
+    if avg_carbs is not None:
+        if avg_carbs < diet_boundaries["carbs"]["lower"]:
+            alerts.append(alert_strings["TooLittleCarbs"])
+        if avg_carbs > diet_boundaries["carbs"]["upper"]:
+            alerts.append(alert_strings["TooManyCarbs"])
+    if avg_fats is not None:
+        if avg_fats < diet_boundaries["fats"]["lower"]:
+            alerts.append(alert_strings["TooLittleFats"])
+        if avg_fats > diet_boundaries["fats"]["upper"]:
+            alerts.append(alert_strings["TooManyFats"])
+    if avg_micros is not None and avg_micros < 0.5:
         alerts.append(alert_strings["TooLittleMicros"])
-    if avg_sleep < 7:
+    if avg_sleep is not None and avg_sleep < 7:
         alerts.append(alert_strings["TooLittleSleep"])
 
     bounds = data_flags[goal]
@@ -493,12 +494,24 @@ def auto_feedback(data):
     )
     cardio_pct = round((cursor.fetchone()[0] / 21) * 100)
 
+    # Format each avg_* value for the prompt, using "no data logged" instead of
+    # leaking a raw "None" into the text Claude sees (and avoiding a crash on
+    # avg_micros * 100 when there's nothing to average)
+    def fmt(value, suffix=""):
+        return f"{value}{suffix}" if value is not None else "no data logged"
+
+    calories_text = fmt(avg_calories)
+    protein_text = fmt(avg_protein, "g")
+    carbs_text = fmt(avg_carbs, "g")
+    fats_text = fmt(avg_fats, "g")
+    sleep_text = fmt(avg_sleep, "h")
+    micros_text = f"{round(avg_micros * 100)}%" if avg_micros is not None else "no data logged"
 
     user_text = (
         f"Goal: {goal}. "
         f"Weight is changing at {avg_weekly_weight_change}kg/week, body fat at {avg_weekly_bf_change}%/week. "
-        f"Daily averages — calories: {avg_calories}, protein: {avg_protein}g, carbs: {avg_carbs}g, "
-        f"fats: {avg_fats}g, sleep: {avg_sleep}h, micronutrient targets met on {round(avg_micros * 100)}% of days. "
+        f"Daily averages — calories: {calories_text}, protein: {protein_text}, carbs: {carbs_text}, "
+        f"fats: {fats_text}, sleep: {sleep_text}, micronutrient targets met on {micros_text} of days. "
         f"Strength trend is {progress_label(strength_progress)}, cardio intensity is {progress_label(intensity_progress)}, "
         f"cardio distance is {progress_label(distance_progress)}. "
         f"Over the last 21 days: logged data on {log_pct}% of days, lifted weights on {lift_pct}% of days, "
